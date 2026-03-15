@@ -1,9 +1,17 @@
 <!DOCTYPE html>
 <html>
+
 <head>
+
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 <title>Combat Tracker</title>
+
+<link rel="stylesheet" href="/static/style.css">
+
 <script src="/static/script.js"></script>
+
 </head>
 
 <body>
@@ -11,16 +19,21 @@
 <h1>Combat Tracker</h1>
 
 Nombre
-<input id="nombre">
+<input id="nombre" type="text">
 
 Velocidad
-<input id="velocidad">
+<input id="velocidad" type="number" inputmode="numeric">
 
-<button onclick="add()">Añadir</button>
+<br>
 
+<button onclick="add()">Añadir personaje</button>
 <button onclick="roll()">Generar iniciativa</button>
 
-<pre id="resultado"></pre>
+<button onclick="nextRound()">Siguiente ronda</button>
+<button onclick="clearSession()">Limpiar sesión</button>
+
+<div id="resultado"></div>
 
 </body>
+
 </html>

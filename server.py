@@ -11,18 +11,40 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 clients = []
 personajes = []
 
+rondas = []
+ronda_actual = 0
+
+
+def mostrar_direcciones():
+    hostname = socket.gethostname()
+    ip_local = socket.gethostbyname(hostname)
+
+    print("\n==============================")
+    print("Servidor iniciado")
+    print("Accede desde este PC:")
+    print("http://localhost:8000")
+    print("")
+    print("Accede desde tu móvil:")
+    print(f"http://{ip_local}:8000")
+    print("==============================\n")
+
+
+@app.on_event("startup")
+async def startup_event():
+    mostrar_direcciones()
+
 
 @app.get("/")
 async def get():
     with open("templates/index.html", encoding="utf-8") as f:
         return HTMLResponse(f.read())
 
-@app.on_event("startup")
-async def startup_event():
-    mostrar_direcciones()
 
 @app.websocket("/ws")
 async def websocket_endpoint(ws: WebSocket):
+
+    global rondas
+    global ronda_actual
 
     await ws.accept()
     clients.append(ws)
@@ -34,85 +56,79 @@ async def websocket_endpoint(ws: WebSocket):
 
             data = await ws.receive_json()
 
-            # ----------------------------
+            # -------------------
             # AÑADIR PERSONAJE
-            # ----------------------------
+            # -------------------
             if data["type"] == "add":
 
                 p = data["personaje"]
                 personajes.append(p)
 
                 print(f"[ADD] {p['nombre']} añadido con velocidad {p['velocidad']}")
-                
-                # avisar a todos los clientes
+
                 for client in clients:
                     await client.send_json({
                         "type": "add",
                         "personaje": p
-                })
+                    })
 
-            # ----------------------------
+            # -------------------
             # GENERAR INICIATIVA
-            # ----------------------------
+            # -------------------
             elif data["type"] == "roll":
 
-                resultado = generar_iniciativa()
+                rondas = generar_iniciativa()
+                ronda_actual = 0
 
-                print("\n=== INICIATIVA GENERADA ===")
+                await enviar_ronda_actual()
 
-                for r in resultado:
+            # -------------------
+            # SIGUIENTE RONDA
+            # -------------------
+            elif data["type"] == "next":
 
-                    print(f"\n--- RONDA {r['ronda']} ---")
+                if ronda_actual < len(rondas) - 1:
+                    ronda_actual += 1
 
-                    for t in r["turnos"]:
+                await enviar_ronda_actual()
 
-                        if t["roll"] >= 90:
-                            line = f"{t['nombre']}: Vel {t['velocidad']} + d100({t['roll']}) -> 160 = {t['total']}"
-                        else:
-                            line = f"{t['nombre']}: Vel {t['velocidad']} + d100({t['roll']}) = {t['total']}"
+            # -------------------
+            # LIMPIAR SESION
+            # -------------------
+            elif data["type"] == "clear":
 
-                        if t["surprise"]:
-                            line += f" (S - {', '.join(t['surprise'])})"
+                personajes.clear()
+                rondas = []
+                ronda_actual = 0
 
-                        print(line)
+                print("[SESSION CLEARED]")
 
-                print("\n===========================\n")
-
-                # enviar resultado a todos los clientes
                 for client in clients:
                     await client.send_json({
-                        "type": "resultado",
-                        "data": resultado
+                        "type": "clear"
                     })
 
     except Exception as e:
-
         print(f"[ERROR] {e}")
 
     finally:
-
         clients.remove(ws)
         print("[CLIENT DISCONNECTED]")
 
 
-def mostrar_direcciones():
+async def enviar_ronda_actual():
 
-    hostname = socket.gethostname()
-    ip_local = socket.gethostbyname(hostname)
+    if not rondas:
+        return
 
-    print("\n==============================")
-    print("Servidor iniciado")
-    print("")
-    print("Accede desde este PC:")
-    print("http://localhost:8000")
-    print("")
-    print("Accede desde otros dispositivos en tu red:")
-    print(f"http://{ip_local}:8000")
-    print("==============================\n")
+    ronda = rondas[ronda_actual]
 
-# ---------------------------------------------------
-# LOGICA DE INICIATIVA
-# ---------------------------------------------------
+    for client in clients:
+        await client.send_json({
+            "type": "ronda",
+            "data": ronda
+        })
+
 
 def generar_iniciativa():
 
@@ -145,7 +161,6 @@ def generar_iniciativa():
 
         turnos.sort(key=lambda x: x["total"], reverse=True)
 
-        # calcular sorpresa
         for t in turnos:
             for other in turnos:
                 if t["nombre"] != other["nombre"] and t["total"] > other["total"] + 150:

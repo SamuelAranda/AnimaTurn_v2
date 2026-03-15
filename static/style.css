@@ -1,0 +1,109 @@
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 20px;
+}
+
+/* INPUTS */
+
+input {
+    margin: 5px;
+    padding: 6px;
+}
+
+/* BOTONES */
+
+button {
+    padding: 10px;
+    margin: 5px;
+}
+
+/* RESULTADO */
+
+#resultado {
+    margin-top: 15px;
+}
+
+/* TARJETAS DE TURNO */
+
+.turn-card {
+
+    border: 1px solid #ccc;
+    border-radius: 6px;
+
+    padding: 8px;
+    margin-bottom: 4px;
+
+    background: #f9f9f9;
+
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.turn-name {
+
+    font-weight: bold;
+}
+
+.turn-roll {
+
+    font-size: 14px;
+}
+
+.turn-surprise {
+
+    font-style: italic;
+    color: #555;
+}
+
+/* MENSAJES */
+
+.info-box {
+
+    border: 1px solid #ddd;
+    padding: 6px;
+    margin-bottom: 4px;
+    background: #f0f0f0;
+}
+
+/* ========================= */
+/* MODO MOVIL */
+/* ========================= */
+
+@media (max-width: 700px) {
+
+    body {
+        font-size: 20px;
+        margin: 10px;
+    }
+
+    input {
+
+        display: block;
+        width: 100%;
+        font-size: 20px;
+        padding: 12px;
+        margin-bottom: 8px;
+    }
+
+    button {
+
+        display: block;
+        width: 100%;
+        font-size: 22px;
+        padding: 16px;
+        margin-bottom: 8px;
+    }
+
+    .turn-card {
+
+        font-size: 20px;
+        padding: 10px;
+        margin-bottom: 6px;
+    }
+
+    .turn-name {
+
+        font-size: 22px;
+    }
+
+}

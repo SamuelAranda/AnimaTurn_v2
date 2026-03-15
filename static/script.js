@@ -8,52 +8,83 @@ ws.onmessage = (event) => {
 
     let msg = JSON.parse(event.data)
 
-    console.log(msg)
-
-    // -----------------------------
-    // CUANDO SE AÑADE PERSONAJE
-    // -----------------------------
     if (msg.type === "add") {
 
         let p = msg.personaje
 
-        let texto = `${p.nombre} añadido (Vel ${p.velocidad})\n`
+        let box = `
+        <div class="info-box">
+            <strong>${p.nombre}</strong> añadido (Vel ${p.velocidad})
+        </div>
+        `
 
-        document.getElementById("resultado").textContent += texto
+        let resultado = document.getElementById("resultado")
+
+        resultado.innerHTML += box
+
+        scrollResultado()
     }
 
-    // -----------------------------
-    // RESULTADO DE INICIATIVA
-    // -----------------------------
-    if (msg.type === "resultado") {
+    if (msg.type === "ronda") {
 
-        let out = ""
+        mostrarRonda(msg.data)
+    }
 
-        msg.data.forEach(ronda => {
+    if (msg.type === "clear") {
 
-            out += "\n--- RONDA " + ronda.ronda + " ---\n"
-
-            ronda.turnos.forEach(p => {
-
-                let line = ""
-
-                if (p.roll >= 90)
-                    line = `${p.nombre}: Vel ${p.velocidad} + d100(${p.roll}) -> 160 = ${p.total}`
-                else
-                    line = `${p.nombre}: Vel ${p.velocidad} + d100(${p.roll}) = ${p.total}`
-
-                if (Array.isArray(p.surprise) && p.surprise.length > 0)
-                    line += ` (S - ${p.surprise.join(", ")})`
-
-                out += line + "\n"
-
-            })
-
-        })
-
-        document.getElementById("resultado").textContent = out
+        document.getElementById("resultado").innerHTML = ""
     }
 }
+
+
+function mostrarRonda(ronda) {
+
+    let html = `<h2>Ronda ${ronda.ronda}</h2>`
+
+    ronda.turnos.forEach(p => {
+
+        let sorpresa = ""
+
+        if (Array.isArray(p.surprise) && p.surprise.length > 0) {
+            sorpresa = `<em>Sorpresa sobre ${p.surprise.join(", ")}</em>`
+        }
+
+        let tirada = ""
+
+        if (p.roll >= 90)
+            tirada = `Vel ${p.velocidad} + d100(${p.roll}) → 160 = ${p.total}`
+        else
+            tirada = `Vel ${p.velocidad} + d100(${p.roll}) = ${p.total}`
+
+        html += `
+        <div class="turn-card">
+            <div class="turn-name">${p.nombre}</div>
+            <div class="turn-roll">${tirada}</div>
+            <div class="turn-surprise">${sorpresa}</div>
+        </div>
+        `
+    })
+
+    let resultado = document.getElementById("resultado")
+
+    resultado.innerHTML = html
+
+    scrollResultado()
+}
+
+
+function scrollResultado() {
+
+    let resultado = document.getElementById("resultado")
+
+    resultado.scrollTop = resultado.scrollHeight
+
+    window.scrollTo({
+        top: document.body.scrollHeight,
+        behavior: "smooth"
+    })
+}
+
 
 function add() {
 
@@ -67,11 +98,31 @@ function add() {
             velocidad: velocidad
         }
     }))
+
+    document.getElementById("nombre").value = ""
+    document.getElementById("velocidad").value = ""
 }
+
 
 function roll() {
 
     ws.send(JSON.stringify({
         type: "roll"
+    }))
+}
+
+
+function nextRound() {
+
+    ws.send(JSON.stringify({
+        type: "next"
+    }))
+}
+
+
+function clearSession() {
+
+    ws.send(JSON.stringify({
+        type: "clear"
     }))
 }
