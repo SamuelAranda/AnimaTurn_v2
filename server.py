@@ -16,16 +16,20 @@ ronda_actual = 0
 
 
 def mostrar_direcciones():
-    hostname = socket.gethostname()
-    ip_local = socket.gethostbyname(hostname)
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("8.8.8.8", 80))
+        ip_local = s.getsockname()[0]
+    except:
+        ip_local = "127.0.0.1"
+    finally:
+        s.close()
+
+    puerto = 8001
 
     print("\n==============================")
-    print("Servidor iniciado")
-    print("Accede desde este PC:")
-    print("http://localhost:8000")
-    print("")
-    print("Accede desde tu móvil:")
-    print(f"http://{ip_local}:8000")
+    print(f"http://localhost:{puerto}")
+    print(f"http://{ip_local}:{puerto}")
     print("==============================\n")
 
 
@@ -49,42 +53,35 @@ async def websocket_endpoint(ws: WebSocket):
     await ws.accept()
     clients.append(ws)
 
-    print("[CLIENT CONNECTED]")
-
     try:
         while True:
 
             data = await ws.receive_json()
 
-            # -------------------
-            # AÑADIR PERSONAJE
-            # -------------------
             if data["type"] == "add":
 
-                p = data["personaje"]
-                personajes.append(p)
+                raw = data["personaje"]
 
-                print(f"[ADD] {p['nombre']} añadido con velocidad {p['velocidad']}")
+                personaje = {
+                    "nombre": str(raw.get("nombre", "")),
+                    "velocidad": int(raw.get("velocidad", 0) or 0),
+                    "estilo": int(raw.get("estilo", 0) or 0)
+                }
+
+                personajes.append(personaje)
 
                 for client in clients:
                     await client.send_json({
                         "type": "add",
-                        "personaje": p
+                        "personaje": personaje
                     })
 
-            # -------------------
-            # GENERAR INICIATIVA
-            # -------------------
             elif data["type"] == "roll":
 
                 rondas = generar_iniciativa()
                 ronda_actual = 0
-
                 await enviar_ronda_actual()
 
-            # -------------------
-            # SIGUIENTE RONDA
-            # -------------------
             elif data["type"] == "next":
 
                 if ronda_actual < len(rondas) - 1:
@@ -92,28 +89,20 @@ async def websocket_endpoint(ws: WebSocket):
 
                 await enviar_ronda_actual()
 
-            # -------------------
-            # LIMPIAR SESION
-            # -------------------
             elif data["type"] == "clear":
 
                 personajes.clear()
                 rondas = []
                 ronda_actual = 0
 
-                print("[SESSION CLEARED]")
-
                 for client in clients:
-                    await client.send_json({
-                        "type": "clear"
-                    })
+                    await client.send_json({"type": "clear"})
 
     except Exception as e:
-        print(f"[ERROR] {e}")
+        print("ERROR:", e)
 
     finally:
         clients.remove(ws)
-        print("[CLIENT DISCONNECTED]")
 
 
 async def enviar_ronda_actual():
@@ -130,6 +119,54 @@ async def enviar_ronda_actual():
         })
 
 
+# ---------------------------
+# TABLAS DE SISTEMA
+# ---------------------------
+
+def obtener_umbral_sorpresa(estilo):
+
+    if estilo >= 440:
+        return 60
+    elif estilo >= 320:
+        return 80
+    elif estilo >= 280:
+        return 90
+    elif estilo >= 240:
+        return 110
+    elif estilo >= 180:
+        return 120
+    elif estilo >= 140:
+        return 130
+    elif estilo >= 120:
+        return 140
+    else:
+        return 150
+
+
+def obtener_tipo_sorpresa(diferencia):
+
+    if diferencia >= 440:
+        return "ZEN"
+    elif diferencia >= 320:
+        return "INH"
+    elif diferencia >= 280:
+        return "IMP"
+    elif diferencia >= 240:
+        return "CIM"
+    elif diferencia >= 180:
+        return "ABS"
+    elif diferencia >= 140:
+        return "MDF"
+    elif diferencia >= 120:
+        return "DIF"
+    else:
+        return None
+
+
+# ---------------------------
+# GENERADOR
+# ---------------------------
+
 def generar_iniciativa():
 
     if not personajes:
@@ -143,28 +180,48 @@ def generar_iniciativa():
 
         for p in personajes:
 
-            nombre = p["nombre"]
-            velocidad = p["velocidad"]
-
             roll = random.randint(1, 100)
             tirada = 160 if roll >= 90 else roll
-            total = velocidad + tirada
+
+            total = p["velocidad"] + tirada
 
             turnos.append({
-                "nombre": nombre,
-                "velocidad": velocidad,
+                "nombre": p["nombre"],
+                "velocidad": p["velocidad"],
+                "estilo": p["estilo"],
                 "roll": roll,
-                "tirada": tirada,
                 "total": total,
-                "surprise": []
+                "surprise": [],
+                "tipo_sorpresa": None
             })
 
         turnos.sort(key=lambda x: x["total"], reverse=True)
 
         for t in turnos:
+
+            # SOLO ronda 1 usa estilo
+            if ronda == 1:
+                umbral = obtener_umbral_sorpresa(t["estilo"])
+            else:
+                umbral = 150
+
             for other in turnos:
-                if t["nombre"] != other["nombre"] and t["total"] > other["total"] + 150:
+
+                if t is other:
+                    continue
+
+                diferencia = t["total"] - other["total"]
+
+                if diferencia >= umbral:
+
                     t["surprise"].append(other["nombre"])
+
+                    tipo = obtener_tipo_sorpresa(diferencia)
+
+                    if tipo:
+                        t["tipo_sorpresa"] = tipo
+
+            print(f"{t['nombre']} → ronda={ronda} total={t['total']} estilo={t['estilo']} umbral={umbral} tipo={t['tipo_sorpresa']}")
 
         todas_rondas.append({
             "ronda": ronda,
