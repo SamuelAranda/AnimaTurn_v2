@@ -318,6 +318,11 @@ button:active {
     gap: 14px;
 }
 
+#resultado {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+}
+
 .info-box,
 .turn-card {
     position: relative;
@@ -462,6 +467,10 @@ button:active {
     line-height: 1.6;
 }
 
+#resultado .empty-state {
+    grid-column: 1 / -1;
+}
+
 @media (max-width: 980px) {
     .hero,
     .layout {
@@ -471,6 +480,10 @@ button:active {
     .battle-heading {
         align-items: start;
         flex-direction: column;
+    }
+
+    #resultado {
+        grid-template-columns: 1fr;
     }
 }
 
