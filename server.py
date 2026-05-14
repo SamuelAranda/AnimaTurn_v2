@@ -104,13 +104,19 @@ async def websocket_endpoint(ws: WebSocket):
 
                 personaje_id = int(data.get("id", 0) or 0)
                 personajes[:] = [p for p in personajes if p["id"] != personaje_id]
-                rondas = []
-                ronda_actual = 0
+
+                for ronda in rondas:
+                    ronda["turnos"] = [
+                        turno for turno in ronda["turnos"]
+                        if turno["id"] != personaje_id
+                    ]
 
                 await broadcast({
                     "type": "delete",
                     "id": personaje_id
                 })
+
+                await enviar_ronda_actual()
 
             elif data["type"] == "next":
 

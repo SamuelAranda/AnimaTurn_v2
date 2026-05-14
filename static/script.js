@@ -14,7 +14,6 @@ ws.onmessage = (event) => {
 
     if (msg.type === "delete") {
         removePersonaje(msg.id)
-        document.getElementById("resultado").innerHTML = ""
     }
 
     if (msg.type === "clear") {
