@@ -1,5 +1,10 @@
 let ws = new WebSocket("ws://" + location.host + "/ws")
 
+document.addEventListener("DOMContentLoaded", () => {
+    renderEmptyState()
+    actualizarEstadoRonda("Pendiente de generar")
+})
+
 ws.onmessage = (event) => {
 
     let msg = JSON.parse(event.data)
@@ -18,9 +23,9 @@ ws.onmessage = (event) => {
     }
 
     if (msg.type === "clear") {
-        setSesionActiva(false)
         document.getElementById("personajes").innerHTML = ""
         document.getElementById("resultado").innerHTML = ""
+        setSesionActiva(false)
     }
 }
 
@@ -35,7 +40,9 @@ function mostrarRonda(ronda) {
         titulo += " (Sin estilo)"
     }
 
-    let html = `<h2>${titulo}</h2>`
+    actualizarEstadoRonda(titulo)
+
+    let html = ""
 
     ronda.turnos.forEach(p => {
 
@@ -44,9 +51,18 @@ function mostrarRonda(ronda) {
         if (p.surprise.length > 0) {
 
             if (p.tipo_sorpresa) {
-                sorpresa = `<em>Sorpresa (${p.tipo_sorpresa}) sobre ${p.surprise.join(", ")}</em>`
+                sorpresa = `
+                <div class="surprise-banner">
+                    <span class="surprise-tag">${p.tipo_sorpresa}</span>
+                    <span>Sorpresa sobre ${p.surprise.join(", ")}</span>
+                </div>
+                `
             } else {
-                sorpresa = `<em>Sorpresa sobre ${p.surprise.join(", ")}</em>`
+                sorpresa = `
+                <div class="surprise-banner">
+                    <span>Sorpresa sobre ${p.surprise.join(", ")}</span>
+                </div>
+                `
             }
         }
 
@@ -60,11 +76,20 @@ function mostrarRonda(ronda) {
                 <div class="turn-name"><strong class="${getBandoClass(p.bando)}">${p.nombre}</strong></div>
                 <button type="button" class="delete-button" onclick="deletePersonaje(${p.id})">Eliminar</button>
             </div>
+            <div class="turn-meta">
+                <div class="stat-chip">Vel <strong>${p.velocidad}</strong></div>
+                <div class="stat-chip">Total <strong>${p.total}</strong></div>
+                <div class="stat-chip">Dado <strong>${p.roll >= 90 ? "160" : p.roll}</strong></div>
+            </div>
             <div class="turn-roll">${tirada}</div>
             <div class="turn-surprise">${sorpresa}</div>
         </div>
         `
     })
+
+    if (!html) {
+        html = emptyStateMarkup("No quedan personajes en esta ronda.")
+    }
 
     document.getElementById("resultado").innerHTML = html
     scrollResultado()
@@ -82,6 +107,11 @@ function scrollResultado() {
 function setSesionActiva(activa) {
     const seccion = document.getElementById("personajes-seccion")
     seccion.style.display = activa ? "none" : "block"
+
+    if (!activa && !document.getElementById("resultado").innerHTML.trim()) {
+        renderEmptyState()
+        actualizarEstadoRonda("Pendiente de generar")
+    }
 }
 
 
@@ -94,7 +124,10 @@ function renderPersonaje(p) {
             <strong class="${getBandoClass(p.bando)}">${p.nombre}</strong>
             <button type="button" class="delete-button" onclick="deletePersonaje(${p.id})">Eliminar</button>
         </div>
-        <div>Vel ${p.velocidad} | Est ${p.estilo}</div>
+        <div class="personaje-meta">
+            <div class="stat-chip">Vel <strong>${p.velocidad}</strong></div>
+            <div class="stat-chip">Estilo <strong>${p.estilo}</strong></div>
+        </div>
     </div>
     `
 }
@@ -103,6 +136,23 @@ function renderPersonaje(p) {
 function removePersonaje(id) {
     const card = document.getElementById(`personaje-${id}`)
     if (card) card.remove()
+}
+
+
+function actualizarEstadoRonda(texto) {
+    document.getElementById("estado-ronda").textContent = texto
+}
+
+
+function emptyStateMarkup(texto) {
+    return `<div class="empty-state">${texto}</div>`
+}
+
+
+function renderEmptyState() {
+    document.getElementById("resultado").innerHTML = emptyStateMarkup(
+        "Anade personajes y genera la iniciativa para ver el orden de combate."
+    )
 }
 
 
