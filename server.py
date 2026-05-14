@@ -65,7 +65,8 @@ async def websocket_endpoint(ws: WebSocket):
                 personaje = {
                     "nombre": str(raw.get("nombre", "")),
                     "velocidad": int(raw.get("velocidad", 0) or 0),
-                    "estilo": int(raw.get("estilo", 0) or 0)
+                    "estilo": int(raw.get("estilo", 0) or 0),
+                    "bando": str(raw.get("bando", "")).strip().lower()
                 }
 
                 personajes.append(personaje)
@@ -189,6 +190,7 @@ def generar_iniciativa():
                 "nombre": p["nombre"],
                 "velocidad": p["velocidad"],
                 "estilo": p["estilo"],
+                "bando": p.get("bando", ""),
                 "roll": roll,
                 "total": total,
                 "surprise": [],

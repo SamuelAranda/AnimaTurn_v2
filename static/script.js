@@ -10,7 +10,7 @@ ws.onmessage = (event) => {
 
         document.getElementById("resultado").innerHTML += `
         <div class="info-box">
-            <strong>${p.nombre}</strong> añadido 
+            <strong class="${getBandoClass(p.bando)}">${p.nombre}</strong> añadido 
             (Vel ${p.velocidad} | Est ${p.estilo})
         </div>
         `
@@ -59,7 +59,7 @@ function mostrarRonda(ronda) {
 
         html += `
         <div class="turn-card">
-            <div class="turn-name"><strong>${p.nombre}</strong></div>
+            <div class="turn-name"><strong class="${getBandoClass(p.bando)}">${p.nombre}</strong></div>
             <div class="turn-roll">${tirada}</div>
             <div class="turn-surprise">${sorpresa}</div>
         </div>
@@ -79,22 +79,39 @@ function scrollResultado() {
 }
 
 
+function getBandoSeleccionado() {
+    const seleccionado = document.querySelector('input[name="bando"]:checked')
+    return seleccionado ? seleccionado.value : ""
+}
+
+
+function getBandoClass(bando) {
+    if (bando === "aliado") return "nombre-aliado"
+    if (bando === "enemigo") return "nombre-enemigo"
+    return "nombre-neutral"
+}
+
+
 function add() {
 
     let nombre = document.getElementById("nombre").value
     let velocidad = parseInt(document.getElementById("velocidad").value)
     let estilo = Number(document.getElementById("estilo").value)
+    let bando = getBandoSeleccionado()
 
     if (isNaN(estilo)) estilo = 0
 
     ws.send(JSON.stringify({
         type: "add",
-        personaje: { nombre, velocidad, estilo }
+        personaje: { nombre, velocidad, estilo, bando }
     }))
 
     document.getElementById("nombre").value = ""
     document.getElementById("velocidad").value = ""
     document.getElementById("estilo").value = ""
+    document.querySelectorAll('input[name="bando"]').forEach(input => {
+        input.checked = false
+    })
 }
 
 
