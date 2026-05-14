@@ -25,7 +25,7 @@ def mostrar_direcciones():
     finally:
         s.close()
 
-    puerto = 8001
+    puerto = 8000
 
     print("\n==============================")
     print(f"http://localhost:{puerto}")
