@@ -9,6 +9,7 @@ ws.onmessage = (event) => {
     }
 
     if (msg.type === "ronda") {
+        setSesionActiva(true)
         mostrarRonda(msg.data)
     }
 
@@ -17,6 +18,7 @@ ws.onmessage = (event) => {
     }
 
     if (msg.type === "clear") {
+        setSesionActiva(false)
         document.getElementById("personajes").innerHTML = ""
         document.getElementById("resultado").innerHTML = ""
     }
@@ -54,7 +56,10 @@ function mostrarRonda(ronda) {
 
         html += `
         <div class="turn-card">
-            <div class="turn-name"><strong class="${getBandoClass(p.bando)}">${p.nombre}</strong></div>
+            <div class="turn-header">
+                <div class="turn-name"><strong class="${getBandoClass(p.bando)}">${p.nombre}</strong></div>
+                <button type="button" class="delete-button" onclick="deletePersonaje(${p.id})">Eliminar</button>
+            </div>
             <div class="turn-roll">${tirada}</div>
             <div class="turn-surprise">${sorpresa}</div>
         </div>
@@ -71,6 +76,12 @@ function scrollResultado() {
         top: document.body.scrollHeight,
         behavior: "smooth"
     })
+}
+
+
+function setSesionActiva(activa) {
+    const seccion = document.getElementById("personajes-seccion")
+    seccion.style.display = activa ? "none" : "block"
 }
 
 
@@ -128,6 +139,10 @@ function add() {
     document.querySelectorAll('input[name="bando"]').forEach(input => {
         input.checked = false
     })
+
+    if (!document.getElementById("resultado").innerHTML.trim()) {
+        setSesionActiva(false)
+    }
 }
 
 

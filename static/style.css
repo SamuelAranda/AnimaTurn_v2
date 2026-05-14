@@ -52,6 +52,13 @@ button {
     font-weight: bold;
 }
 
+.turn-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
 .nombre-aliado {
     color: green;
 }
@@ -161,6 +168,11 @@ button {
         font-size: 20px;
         padding: 10px;
         margin-bottom: 6px;
+    }
+
+    .turn-header {
+        align-items: flex-start;
+        flex-direction: column;
     }
 
     .turn-name {

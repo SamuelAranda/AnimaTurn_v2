@@ -89,10 +89,18 @@ async def websocket_endpoint(ws: WebSocket):
 
                 personajes.append(personaje)
 
+                if rondas:
+                    for ronda in rondas[ronda_actual:]:
+                        ronda["turnos"].append(crear_turno_personaje(personaje))
+                        recalcular_sorpresas(ronda["turnos"], ronda["ronda"])
+
                 await broadcast({
                     "type": "add",
                     "personaje": personaje
                 })
+
+                if rondas:
+                    await enviar_ronda_actual()
 
             elif data["type"] == "roll":
 
@@ -110,6 +118,7 @@ async def websocket_endpoint(ws: WebSocket):
                         turno for turno in ronda["turnos"]
                         if turno["id"] != personaje_id
                     ]
+                    recalcular_sorpresas(ronda["turnos"], ronda["ronda"])
 
                 await broadcast({
                     "type": "delete",
@@ -152,6 +161,52 @@ async def enviar_ronda_actual():
         "type": "ronda",
         "data": ronda
     })
+
+
+def recalcular_sorpresas(turnos, numero_ronda):
+    for turno in turnos:
+        turno["surprise"] = []
+        turno["tipo_sorpresa"] = None
+
+    turnos.sort(key=lambda x: x["total"], reverse=True)
+
+    for t in turnos:
+        if numero_ronda == 1:
+            umbral = obtener_umbral_sorpresa(t["estilo"])
+        else:
+            umbral = 150
+
+        for other in turnos:
+            if t is other:
+                continue
+
+            diferencia = t["total"] - other["total"]
+
+            if diferencia >= umbral:
+                t["surprise"].append(other["nombre"])
+
+                tipo = obtener_tipo_sorpresa(diferencia)
+
+                if tipo:
+                    t["tipo_sorpresa"] = tipo
+
+
+def crear_turno_personaje(personaje):
+    roll = random.randint(1, 100)
+    tirada = 160 if roll >= 90 else roll
+    total = personaje["velocidad"] + tirada
+
+    return {
+        "id": personaje["id"],
+        "nombre": personaje["nombre"],
+        "velocidad": personaje["velocidad"],
+        "estilo": personaje["estilo"],
+        "bando": personaje.get("bando", ""),
+        "roll": roll,
+        "total": total,
+        "surprise": [],
+        "tipo_sorpresa": None
+    }
 
 
 # ---------------------------
@@ -214,51 +269,9 @@ def generar_iniciativa():
         turnos = []
 
         for p in personajes:
+            turnos.append(crear_turno_personaje(p))
 
-            roll = random.randint(1, 100)
-            tirada = 160 if roll >= 90 else roll
-
-            total = p["velocidad"] + tirada
-
-            turnos.append({
-                "id": p["id"],
-                "nombre": p["nombre"],
-                "velocidad": p["velocidad"],
-                "estilo": p["estilo"],
-                "bando": p.get("bando", ""),
-                "roll": roll,
-                "total": total,
-                "surprise": [],
-                "tipo_sorpresa": None
-            })
-
-        turnos.sort(key=lambda x: x["total"], reverse=True)
-
-        for t in turnos:
-
-            # SOLO ronda 1 usa estilo
-            if ronda == 1:
-                umbral = obtener_umbral_sorpresa(t["estilo"])
-            else:
-                umbral = 150
-
-            for other in turnos:
-
-                if t is other:
-                    continue
-
-                diferencia = t["total"] - other["total"]
-
-                if diferencia >= umbral:
-
-                    t["surprise"].append(other["nombre"])
-
-                    tipo = obtener_tipo_sorpresa(diferencia)
-
-                    if tipo:
-                        t["tipo_sorpresa"] = tipo
-
-            print(f"{t['nombre']} → ronda={ronda} total={t['total']} estilo={t['estilo']} umbral={umbral} tipo={t['tipo_sorpresa']}")
+        recalcular_sorpresas(turnos, ronda)
 
         todas_rondas.append({
             "ronda": ronda,
