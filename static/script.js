@@ -5,24 +5,19 @@ ws.onmessage = (event) => {
     let msg = JSON.parse(event.data)
 
     if (msg.type === "add") {
-
-        let p = msg.personaje
-
-        document.getElementById("resultado").innerHTML += `
-        <div class="info-box">
-            <strong class="${getBandoClass(p.bando)}">${p.nombre}</strong> añadido 
-            (Vel ${p.velocidad} | Est ${p.estilo})
-        </div>
-        `
-
-        scrollResultado()
+        renderPersonaje(msg.personaje)
     }
 
     if (msg.type === "ronda") {
         mostrarRonda(msg.data)
     }
 
+    if (msg.type === "delete") {
+        removePersonaje(msg.id)
+    }
+
     if (msg.type === "clear") {
+        document.getElementById("personajes").innerHTML = ""
         document.getElementById("resultado").innerHTML = ""
     }
 }
@@ -79,6 +74,27 @@ function scrollResultado() {
 }
 
 
+function renderPersonaje(p) {
+    const contenedor = document.getElementById("personajes")
+
+    contenedor.innerHTML += `
+    <div class="info-box personaje-card" id="personaje-${p.id}">
+        <div class="personaje-header">
+            <strong class="${getBandoClass(p.bando)}">${p.nombre}</strong>
+            <button type="button" class="delete-button" onclick="deletePersonaje(${p.id})">Eliminar</button>
+        </div>
+        <div>Vel ${p.velocidad} | Est ${p.estilo}</div>
+    </div>
+    `
+}
+
+
+function removePersonaje(id) {
+    const card = document.getElementById(`personaje-${id}`)
+    if (card) card.remove()
+}
+
+
 function getBandoSeleccionado() {
     const seleccionado = document.querySelector('input[name="bando"]:checked')
     return seleccionado ? seleccionado.value : ""
@@ -117,6 +133,10 @@ function add() {
 
 function roll() {
     ws.send(JSON.stringify({ type: "roll" }))
+}
+
+function deletePersonaje(id) {
+    ws.send(JSON.stringify({ type: "delete", id }))
 }
 
 function nextRound() {

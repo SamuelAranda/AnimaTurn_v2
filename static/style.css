@@ -85,6 +85,27 @@ button {
     background: #f0f0f0;
 }
 
+.personaje-card {
+    margin-bottom: 8px;
+}
+
+.personaje-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.delete-button {
+    padding: 6px 10px;
+    margin: 0;
+    background: #b22222;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
 /* ========================= */
 /* MODO MOVIL */
 /* ========================= */
@@ -122,6 +143,17 @@ button {
         font-size: 22px;
         padding: 16px;
         margin-bottom: 8px;
+    }
+
+    .personaje-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .delete-button {
+        width: 100%;
+        font-size: 18px;
+        padding: 12px;
     }
 
     .turn-card {

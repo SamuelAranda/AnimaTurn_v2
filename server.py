@@ -10,6 +10,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 clients = []
 personajes = []
+next_personaje_id = 1
 
 rondas = []
 ronda_actual = 0
@@ -49,6 +50,7 @@ async def websocket_endpoint(ws: WebSocket):
 
     global rondas
     global ronda_actual
+    global next_personaje_id
 
     await ws.accept()
     clients.append(ws)
@@ -63,11 +65,13 @@ async def websocket_endpoint(ws: WebSocket):
                 raw = data["personaje"]
 
                 personaje = {
+                    "id": next_personaje_id,
                     "nombre": str(raw.get("nombre", "")),
                     "velocidad": int(raw.get("velocidad", 0) or 0),
                     "estilo": int(raw.get("estilo", 0) or 0),
                     "bando": str(raw.get("bando", "")).strip().lower()
                 }
+                next_personaje_id += 1
 
                 personajes.append(personaje)
 
@@ -82,6 +86,19 @@ async def websocket_endpoint(ws: WebSocket):
                 rondas = generar_iniciativa()
                 ronda_actual = 0
                 await enviar_ronda_actual()
+
+            elif data["type"] == "delete":
+
+                personaje_id = int(data.get("id", 0) or 0)
+                personajes[:] = [p for p in personajes if p["id"] != personaje_id]
+                rondas = []
+                ronda_actual = 0
+
+                for client in clients:
+                    await client.send_json({
+                        "type": "delete",
+                        "id": personaje_id
+                    })
 
             elif data["type"] == "next":
 
@@ -187,6 +204,7 @@ def generar_iniciativa():
             total = p["velocidad"] + tirada
 
             turnos.append({
+                "id": p["id"],
                 "nombre": p["nombre"],
                 "velocidad": p["velocidad"],
                 "estilo": p["estilo"],
