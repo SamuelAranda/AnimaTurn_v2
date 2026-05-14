@@ -1,36 +1,50 @@
 # Combat Turn Simulator
 
-A simple Python program with a GUI for simulating combat turns in a game.
+Aplicacion web en Python para calcular la iniciativa de combate durante 10 rondas.
 
-## Description
+## Descripcion
 
-This program allows players and enemies to input their speeds. It then simulates 10 rounds of combat, where each round a d100 (1-100) roll is added to each entity's speed, and the entities are sorted from highest to lowest total speed.
+La aplicacion permite anadir personajes con estos datos:
 
-## How to Run
+- `nombre`
+- `velocidad`
+- `estilo`
 
-### GUI Version
-Run `python main.py` to start the GUI.
+En cada ronda, cada personaje realiza una tirada de `d100`. Si el resultado es `90` o superior, la tirada pasa a valer `160`. Ese valor se suma a la velocidad base y el sistema ordena los turnos de mayor a menor.
 
-Add players and enemies by entering name and speed, then click "Simulate" to see the results.
+La version web tambien calcula:
 
-### Web Version
-1. Install dependencies:
-   ```powershell
+- Sorpresa entre personajes segun la diferencia de iniciativa.
+- Umbrales especiales basados en `estilo` durante la ronda 1.
+- Tipos de sorpresa como `DIF`, `MDF`, `ABS`, `CIM`, `IMP`, `INH` y `ZEN`.
+
+La comunicacion entre cliente y servidor se hace en tiempo real mediante `WebSocket`.
+
+## Como ejecutarlo
+
+1. Instala las dependencias:
+   ```bash
    pip install -r requirements.txt
    ```
 
-2. Start the server:
-   ```powershell
+2. Arranca el servidor:
+   ```bash
    python -m uvicorn server:app --reload --host 0.0.0.0 --port 8000
    ```
 
-3. Access the application:
-   - **Local:** http://localhost:8000
-   - **Other devices:** http://YOUR_IP:8000
+3. Abre la aplicacion en el navegador:
+   - Local: [http://localhost:8000](http://localhost:8000)
+   - Red local: `http://TU_IP:8000`
 
-## Requirements
+## Estructura
+
+- `server.py`: servidor FastAPI y logica de iniciativa.
+- `templates/index.html`: interfaz principal.
+- `static/script.js`: cliente WebSocket y renderizado de rondas.
+- `static/style.css`: estilos basicos y adaptacion movil.
+
+## Requisitos
 
 - Python 3.x
-- Tkinter (usually included with Python)
 - FastAPI
 - Uvicorn
