@@ -1,6 +1,6 @@
 # Combat Turn Simulator
 
-Aplicacion web en Python para calcular la iniciativa de combate durante 10 rondas.
+Aplicacion web en Python para calcular la iniciativa de combate durante 25 rondas.
 
 ## Descripcion
 

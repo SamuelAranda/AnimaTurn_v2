@@ -264,7 +264,7 @@ def generar_iniciativa():
 
     todas_rondas = []
 
-    for ronda in range(1, 11):
+    for ronda in range(1, 26):
 
         turnos = []
 

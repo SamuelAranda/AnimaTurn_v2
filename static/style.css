@@ -48,6 +48,10 @@ input {
     padding: 32px 24px 48px;
 }
 
+.mobile-next-bar {
+    display: none;
+}
+
 .page-backdrop {
     position: absolute;
     inset: 20px 24px auto;
@@ -469,41 +473,103 @@ button:active {
 }
 
 @media (max-width: 700px) {
+    body {
+        padding-bottom: 92px;
+    }
+
     .page-shell {
-        padding: 18px 14px 32px;
+        padding: 12px 10px 24px;
     }
 
     .page-backdrop {
-        inset: 10px 14px auto;
-        height: 240px;
-        border-radius: 28px;
+        inset: 8px 10px auto;
+        height: 190px;
+        border-radius: 22px;
     }
 
     .hero {
-        padding: 22px 18px 24px;
+        gap: 12px;
+        padding: 16px 14px 18px;
     }
 
     .hero h1 {
-        font-size: 2.5rem;
+        margin: 6px 0 8px;
+        font-size: 1.95rem;
     }
 
     .hero-text {
-        font-size: 0.98rem;
+        font-size: 0.84rem;
+        line-height: 1.45;
+    }
+
+    .eyebrow,
+    .section-kicker,
+    .hero-stat-label {
+        font-size: 0.62rem;
+        letter-spacing: 0.14em;
+    }
+
+    .hero-panel {
+        gap: 8px;
+        padding: 10px;
+    }
+
+    .hero-stat {
+        gap: 4px;
+        padding: 10px 12px;
+    }
+
+    .hero-stat strong {
+        font-size: 0.95rem;
     }
 
     .control-panel,
     .battle-panel {
-        padding: 20px 16px;
-        border-radius: 22px;
+        padding: 14px 12px;
+        border-radius: 18px;
     }
 
     .panel-heading h2 {
-        font-size: 1.55rem;
+        font-size: 1.2rem;
+    }
+
+    .panel-heading {
+        margin-bottom: 14px;
+    }
+
+    .panel-heading.compact h2 {
+        font-size: 1rem;
     }
 
     .form-grid,
     .action-row {
         grid-template-columns: 1fr;
+    }
+
+    .form-grid {
+        gap: 10px;
+    }
+
+    .field {
+        gap: 5px;
+    }
+
+    .field span,
+    .selector-label {
+        font-size: 0.76rem;
+    }
+
+    input[type="text"],
+    input[type="number"] {
+        padding: 11px 12px;
+        font-size: 0.92rem;
+    }
+
+    .bando-selector {
+        gap: 8px;
+        margin-top: 12px;
+        padding: 10px;
+        border-radius: 14px;
     }
 
     .selector-options {
@@ -512,6 +578,18 @@ button:active {
 
     .selector-pill {
         width: 100%;
+        padding: 8px 10px;
+        font-size: 0.88rem;
+    }
+
+    .action-row {
+        gap: 8px;
+        margin-top: 12px;
+    }
+
+    button {
+        padding: 11px 12px;
+        font-size: 0.92rem;
     }
 
     .personaje-header,
@@ -522,19 +600,70 @@ button:active {
 
     .delete-button {
         width: 100%;
+        padding: 8px 10px;
+        font-size: 0.78rem;
     }
 
     .turn-name,
     .personaje-header strong {
-        font-size: 1.3rem;
+        font-size: 1rem;
+    }
+
+    .personaje-card,
+    .turn-card {
+        padding: 12px 12px 10px;
+        border-radius: 14px;
     }
 
     .turn-roll {
-        font-size: 0.96rem;
+        margin-top: 10px;
+        padding: 10px 12px;
+        font-size: 0.84rem;
+        line-height: 1.35;
     }
 
     .round-badge {
         width: 100%;
+        padding: 8px 10px;
         text-align: center;
+        font-size: 0.72rem;
+    }
+
+    .personaje-meta,
+    .turn-meta {
+        gap: 6px;
+        margin-top: 8px;
+    }
+
+    .stat-chip {
+        padding: 5px 8px;
+        font-size: 0.74rem;
+    }
+
+    .surprise-banner {
+        gap: 8px;
+        padding: 8px 10px;
+        font-size: 0.76rem;
+    }
+
+    .mobile-next-bar {
+        position: fixed;
+        right: 10px;
+        bottom: calc(10px + env(safe-area-inset-bottom));
+        left: 10px;
+        display: block;
+        z-index: 20;
+        padding: 10px;
+        border: 1px solid rgba(94, 68, 50, 0.16);
+        border-radius: 18px;
+        background: rgba(253, 248, 238, 0.94);
+        box-shadow: 0 14px 30px rgba(62, 42, 29, 0.16);
+        backdrop-filter: blur(10px);
+    }
+
+    .mobile-next-button {
+        width: 100%;
+        padding: 13px 14px;
+        font-size: 0.95rem;
     }
 }
