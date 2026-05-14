@@ -16,6 +16,20 @@ rondas = []
 ronda_actual = 0
 
 
+async def broadcast(message):
+    disconnected = []
+
+    for client in clients:
+        try:
+            await client.send_json(message)
+        except Exception:
+            disconnected.append(client)
+
+    for client in disconnected:
+        if client in clients:
+            clients.remove(client)
+
+
 def mostrar_direcciones():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
@@ -75,11 +89,10 @@ async def websocket_endpoint(ws: WebSocket):
 
                 personajes.append(personaje)
 
-                for client in clients:
-                    await client.send_json({
-                        "type": "add",
-                        "personaje": personaje
-                    })
+                await broadcast({
+                    "type": "add",
+                    "personaje": personaje
+                })
 
             elif data["type"] == "roll":
 
@@ -94,11 +107,10 @@ async def websocket_endpoint(ws: WebSocket):
                 rondas = []
                 ronda_actual = 0
 
-                for client in clients:
-                    await client.send_json({
-                        "type": "delete",
-                        "id": personaje_id
-                    })
+                await broadcast({
+                    "type": "delete",
+                    "id": personaje_id
+                })
 
             elif data["type"] == "next":
 
@@ -113,14 +125,14 @@ async def websocket_endpoint(ws: WebSocket):
                 rondas = []
                 ronda_actual = 0
 
-                for client in clients:
-                    await client.send_json({"type": "clear"})
+                await broadcast({"type": "clear"})
 
     except Exception as e:
         print("ERROR:", e)
 
     finally:
-        clients.remove(ws)
+        if ws in clients:
+            clients.remove(ws)
 
 
 async def enviar_ronda_actual():
@@ -130,11 +142,10 @@ async def enviar_ronda_actual():
 
     ronda = rondas[ronda_actual]
 
-    for client in clients:
-        await client.send_json({
-            "type": "ronda",
-            "data": ronda
-        })
+    await broadcast({
+        "type": "ronda",
+        "data": ronda
+    })
 
 
 # ---------------------------
