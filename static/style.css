@@ -356,6 +356,8 @@ button:active {
 .personaje-header strong {
     font-size: 1.22rem;
     line-height: 1.1;
+    font-weight: 700;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .personaje-meta,
@@ -439,15 +441,15 @@ button:active {
 }
 
 .nombre-aliado {
-    color: var(--forest);
+    color: #1f7a43;
 }
 
 .nombre-enemigo {
-    color: var(--wine);
+    color: #b12d23;
 }
 
 .nombre-neutral {
-    color: var(--neutral);
+    color: #1c63b7;
 }
 
 .empty-state {
