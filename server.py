@@ -192,8 +192,26 @@ def recalcular_sorpresas(turnos, numero_ronda):
 
 
 def crear_turno_personaje(personaje):
+    rolls = []
     roll = random.randint(1, 100)
-    tirada = 160 if roll >= 90 else roll
+    rolls.append(roll)
+
+    if roll == 1:
+        tirada = -125
+    elif roll == 2:
+        tirada = -100
+    elif roll == 3:
+        tirada = -75
+    else:
+        tirada = roll
+        umbral_abierta = 90
+
+        while roll >= umbral_abierta:
+            umbral_abierta = min(umbral_abierta + 1, 100)
+            roll = random.randint(1, 100)
+            rolls.append(roll)
+            tirada += roll
+
     total = personaje["velocidad"] + tirada
 
     return {
@@ -202,7 +220,9 @@ def crear_turno_personaje(personaje):
         "velocidad": personaje["velocidad"],
         "estilo": personaje["estilo"],
         "bando": personaje.get("bando", ""),
-        "roll": roll,
+        "roll": rolls[0],
+        "rolls": rolls,
+        "tirada": tirada,
         "total": total,
         "surprise": [],
         "tipo_sorpresa": None

@@ -10,7 +10,13 @@ La aplicacion permite anadir personajes con estos datos:
 - `velocidad`
 - `estilo`
 
-En cada ronda, cada personaje realiza una tirada de `d100`. Si el resultado es `90` o superior, la tirada pasa a valer `160`. Ese valor se suma a la velocidad base y el sistema ordena los turnos de mayor a menor.
+En cada ronda, cada personaje realiza una tirada de `d100` que se suma a su velocidad base. La iniciativa usa estas reglas especiales:
+
+- Si el primer resultado es `90-100`, hay tirada abierta y se vuelve a lanzar.
+- Tras una abierta, el nuevo umbral sube a `91-100`, luego `92-100` y asi sucesivamente hasta `100-100`.
+- Si el primer resultado es `1`, la tirada pasa a `-125`.
+- Si el primer resultado es `2`, la tirada pasa a `-100`.
+- Si el primer resultado es `3`, la tirada pasa a `-75`.
 
 La version web tambien calcula:
 

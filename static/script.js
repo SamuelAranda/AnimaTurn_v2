@@ -66,9 +66,9 @@ function mostrarRonda(ronda) {
             }
         }
 
-        let tirada = p.roll >= 90
-            ? `Vel ${p.velocidad} + d100(${p.roll}) → 160 = ${p.total}`
-            : `Vel ${p.velocidad} + d100(${p.roll}) = ${p.total}`
+        let tirada = formatTirada(p)
+        let tiradaChip = p.tirada >= 0 ? `+${p.tirada}` : `${p.tirada}`
+        let detalleTirada = Array.isArray(p.rolls) ? p.rolls.join(" + ") : p.roll
 
         html += `
         <div class="turn-card">
@@ -79,7 +79,8 @@ function mostrarRonda(ronda) {
             <div class="turn-meta">
                 <div class="stat-chip">Vel <strong>${p.velocidad}</strong></div>
                 <div class="stat-chip">Total <strong>${p.total}</strong></div>
-                <div class="stat-chip">Dado <strong>${p.roll >= 90 ? "160" : p.roll}</strong></div>
+                <div class="stat-chip">Tirada <strong>${tiradaChip}</strong></div>
+                <div class="stat-chip">Dados <strong>${detalleTirada}</strong></div>
             </div>
             <div class="turn-roll">${tirada}</div>
             <div class="turn-surprise">${sorpresa}</div>
@@ -153,6 +154,27 @@ function renderEmptyState() {
     document.getElementById("resultado").innerHTML = emptyStateMarkup(
         "Anade personajes y genera la iniciativa para ver el orden de combate."
     )
+}
+
+
+function formatTirada(p) {
+    if (p.roll === 1) {
+        return `Vel ${p.velocidad} + d100(1) = -125 -> ${p.total}`
+    }
+
+    if (p.roll === 2) {
+        return `Vel ${p.velocidad} + d100(2) = -100 -> ${p.total}`
+    }
+
+    if (p.roll === 3) {
+        return `Vel ${p.velocidad} + d100(3) = -75 -> ${p.total}`
+    }
+
+    if (Array.isArray(p.rolls) && p.rolls.length > 1) {
+        return `Vel ${p.velocidad} + abierta [${p.rolls.join(" + ")}] = ${p.tirada} -> ${p.total}`
+    }
+
+    return `Vel ${p.velocidad} + d100(${p.roll}) = ${p.total}`
 }
 
 
