@@ -1,4 +1,5 @@
 __pycache__/
+session_state.json
 *.pyc
 *.pyo
 *.pyd

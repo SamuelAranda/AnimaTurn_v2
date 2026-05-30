@@ -9,6 +9,10 @@ ws.onmessage = (event) => {
 
     let msg = JSON.parse(event.data)
 
+    if (msg.type === "init") {
+        hydrateState(msg)
+    }
+
     if (msg.type === "add") {
         renderPersonaje(msg.personaje)
     }
@@ -94,6 +98,24 @@ function mostrarRonda(ronda) {
 
     document.getElementById("resultado").innerHTML = html
     scrollResultado()
+}
+
+
+function hydrateState(data) {
+    const personajes = Array.isArray(data.personajes) ? data.personajes : []
+
+    document.getElementById("personajes").innerHTML = ""
+
+    personajes.forEach(renderPersonaje)
+
+    if (data.hay_sesion && data.ronda_actual) {
+        setSesionActiva(true)
+        mostrarRonda(data.ronda_actual)
+        return
+    }
+
+    document.getElementById("resultado").innerHTML = ""
+    setSesionActiva(false)
 }
 
 

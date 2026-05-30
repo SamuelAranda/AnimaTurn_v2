@@ -1,8 +1,11 @@
 from fastapi import FastAPI, WebSocket
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
+import json
 import random
+from pathlib import Path
 import socket
+import uvicorn
 
 app = FastAPI()
 
@@ -14,6 +17,7 @@ next_personaje_id = 1
 
 rondas = []
 ronda_actual = 0
+STATE_FILE = Path("session_state.json")
 
 
 async def broadcast(message):
@@ -28,6 +32,57 @@ async def broadcast(message):
     for client in disconnected:
         if client in clients:
             clients.remove(client)
+
+
+def guardar_estado():
+    payload = {
+        "personajes": personajes,
+        "next_personaje_id": next_personaje_id,
+        "rondas": rondas,
+        "ronda_actual": ronda_actual
+    }
+
+    STATE_FILE.write_text(
+        json.dumps(payload, ensure_ascii=True, indent=2),
+        encoding="utf-8"
+    )
+
+
+def cargar_estado():
+    global personajes
+    global next_personaje_id
+    global rondas
+    global ronda_actual
+
+    if not STATE_FILE.exists():
+        return
+
+    try:
+        payload = json.loads(STATE_FILE.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return
+
+    personajes = payload.get("personajes", [])
+    next_personaje_id = int(payload.get("next_personaje_id", 1) or 1)
+    rondas = payload.get("rondas", [])
+    ronda_actual = int(payload.get("ronda_actual", 0) or 0)
+
+    if not personajes:
+        next_personaje_id = 1
+
+    if ronda_actual >= len(rondas):
+        ronda_actual = max(len(rondas) - 1, 0)
+
+
+async def enviar_estado_inicial(ws: WebSocket):
+    ronda = rondas[ronda_actual] if rondas else None
+
+    await ws.send_json({
+        "type": "init",
+        "personajes": personajes,
+        "ronda_actual": ronda,
+        "hay_sesion": bool(rondas)
+    })
 
 
 def mostrar_direcciones():
@@ -50,6 +105,7 @@ def mostrar_direcciones():
 
 @app.on_event("startup")
 async def startup_event():
+    cargar_estado()
     mostrar_direcciones()
 
 
@@ -68,6 +124,7 @@ async def websocket_endpoint(ws: WebSocket):
 
     await ws.accept()
     clients.append(ws)
+    await enviar_estado_inicial(ws)
 
     try:
         while True:
@@ -98,6 +155,7 @@ async def websocket_endpoint(ws: WebSocket):
                     "type": "add",
                     "personaje": personaje
                 })
+                guardar_estado()
 
                 if rondas:
                     await enviar_ronda_actual()
@@ -106,6 +164,7 @@ async def websocket_endpoint(ws: WebSocket):
 
                 rondas = generar_iniciativa()
                 ronda_actual = 0
+                guardar_estado()
                 await enviar_ronda_actual()
 
             elif data["type"] == "delete":
@@ -124,6 +183,7 @@ async def websocket_endpoint(ws: WebSocket):
                     "type": "delete",
                     "id": personaje_id
                 })
+                guardar_estado()
 
                 await enviar_ronda_actual()
 
@@ -132,6 +192,7 @@ async def websocket_endpoint(ws: WebSocket):
                 if ronda_actual < len(rondas) - 1:
                     ronda_actual += 1
 
+                guardar_estado()
                 await enviar_ronda_actual()
 
             elif data["type"] == "clear":
@@ -139,8 +200,10 @@ async def websocket_endpoint(ws: WebSocket):
                 personajes.clear()
                 rondas = []
                 ronda_actual = 0
+                next_personaje_id = 1
 
                 await broadcast({"type": "clear"})
+                guardar_estado()
 
     except Exception as e:
         print("ERROR:", e)
@@ -299,3 +362,12 @@ def generar_iniciativa():
         })
 
     return todas_rondas
+
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "server:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True
+    )

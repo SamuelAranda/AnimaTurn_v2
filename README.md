@@ -35,6 +35,11 @@ La comunicacion entre cliente y servidor se hace en tiempo real mediante `WebSoc
 
 2. Arranca el servidor:
    ```bash
+   python server.py
+   ```
+
+   Alternativa equivalente:
+   ```bash
    python -m uvicorn server:app --reload --host 0.0.0.0 --port 8000
    ```
 
