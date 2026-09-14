@@ -59,3 +59,15 @@ La comunicacion entre cliente y servidor se hace en tiempo real mediante `WebSoc
 - Python 3.x
 - FastAPI
 - Uvicorn
+## Combate y ataques
+
+La interfaz incluye una pestaña de **Combate** separada de la preparación. Al pulsar sobre un personaje en preparación se pueden editar sus datos privados de combate: `Ataque`, `TA`, `Parada`, `Esquiva`, `Daño` y `Vida`. Estos valores no se muestran en las tarjetas públicas ni se envían al cliente salvo cuando se abre su editor privado.
+
+Durante el combate cada personaje recibe un marcador de turno. El personaje activo puede realizar una acción de ataque seleccionando un objetivo, una defensa (`Parada` o `Esquiva`) y un número. El servidor calcula `Ataque + número - defensa`. Con resultado positivo se aplica TA (`TA x 10`) y se calcula el daño porcentual sobre el daño base del atacante. Los resultados de `0` o menos son fallos; a partir de `-10` se ofrece un contraataque.
+
+La pantalla de ataque también avisa si existe sorpresa entre atacante y objetivo en la ronda actual. El botón **Siguiente personaje** avanza el marcador y, al terminar la ronda, pasa automáticamente a la siguiente.
+
+### Personaje activo
+La pestaña Combate permite cambiar manualmente el personaje activo con **Hacer activo**. El botón **Siguiente personaje** continúa avanzando por el orden de iniciativa y también cambia el activo.
+
+Los personajes de la pestaña **Preparación** permanecen visibles después de generar la iniciativa para poder seguir consultando y editando sus datos secretos.
