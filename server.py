@@ -19,6 +19,10 @@ ronda_actual = 0
 turno_actual = 0
 STATE_FILE = Path("session_state.json")
 
+TIPOS_JUGADOR = {"jugador", "aliado"}
+TIPOS_ENEMIGO = {"enemigo", "pnj"}
+TIPOS_VALIDOS = TIPOS_JUGADOR | TIPOS_ENEMIGO
+
 
 async def broadcast(message):
     disconnected = []
@@ -56,12 +60,7 @@ def cargar_estado():
 
     personajes = payload.get("personajes", [])
     for personaje in personajes:
-        personaje.setdefault("ataque", 0)
-        personaje.setdefault("ta", 0)
-        personaje.setdefault("parada", 0)
-        personaje.setdefault("esquiva", 0)
-        personaje.setdefault("dano", 0)
-        personaje.setdefault("vida", 0)
+        migrar_personaje(personaje)
     next_personaje_id = int(payload.get("next_personaje_id", 1) or 1)
     rondas = payload.get("rondas", [])
     ronda_actual = int(payload.get("ronda_actual", 0) or 0)
@@ -71,7 +70,41 @@ def cargar_estado():
         next_personaje_id = 1
     if ronda_actual >= len(rondas):
         ronda_actual = max(len(rondas) - 1, 0)
+
+    tipos_por_id = {p["id"]: p.get("tipo", "") for p in personajes}
+    for ronda in rondas:
+        for turno in ronda.get("turnos", []):
+            turno.setdefault("tipo", tipos_por_id.get(turno.get("id"), ""))
     normalizar_turno_actual()
+
+
+def migrar_personaje(personaje):
+    tipo = personaje.get("tipo")
+    if tipo not in TIPOS_VALIDOS:
+        bando = personaje.get("bando", "")
+        tipo = bando if bando in TIPOS_VALIDOS else "enemigo"
+    personaje["tipo"] = tipo
+
+    if "vida_max" not in personaje:
+        vida = personaje.get("vida", 0) or 0
+        personaje["vida_max"] = vida
+        personaje["vida_actual"] = vida
+    personaje.setdefault("vida_actual", personaje.get("vida_max", 0))
+
+    if "defensa" not in personaje:
+        personaje["defensa"] = personaje.get("parada", 0) or 0
+
+    for clave, defecto in (
+        ("velocidad", 0), ("estilo", 0), ("ta", 0), ("ataque", 0),
+        ("dano", 0), ("zeon", 0), ("ki", 0),
+    ):
+        personaje.setdefault(clave, defecto)
+    personaje.setdefault("acumulacion", False)
+    personaje.setdefault("criticos", [])
+    personaje.setdefault("a_la_defensiva", False)
+
+    for obsoleto in ("bando", "vida", "parada", "esquiva"):
+        personaje.pop(obsoleto, None)
 
 
 def normalizar_turno_actual():
@@ -86,25 +119,78 @@ def normalizar_turno_actual():
         turno_actual = max(0, min(turno_actual, len(turnos) - 1))
 
 
-def datos_personaje_publicos(personaje):
-    """Solo expone datos que no son secretos."""
+def esta_debil(personaje):
+    vida_max = personaje.get("vida_max", 0) or 0
+    if vida_max <= 0:
+        return False
+    return (personaje.get("vida_actual", 0) or 0) < 0.30 * vida_max
+
+
+def esta_caido(personaje):
+    return (personaje.get("vida_actual", 0) or 0) <= 0
+
+
+def datos_ficha(personaje):
+    """Datos de combate completos. Solo públicos para jugador/aliado."""
     return {
+        "vida_max": personaje.get("vida_max", 0),
+        "vida_actual": personaje.get("vida_actual", 0),
+        "zeon": personaje.get("zeon", 0),
+        "ki": personaje.get("ki", 0),
+        "ta": personaje.get("ta", 0),
+        "dano": personaje.get("dano", 0),
+    }
+
+
+def etiquetas_publicas(personaje):
+    return {
+        "acumulacion": personaje.get("acumulacion", False),
+        "a_la_defensiva": personaje.get("a_la_defensiva", False),
+        "criticos": personaje.get("criticos", []),
+        "debil": esta_debil(personaje),
+        "caido": esta_caido(personaje),
+    }
+
+
+def datos_personaje_publicos(personaje):
+    """Los datos de combate de enemigos y PNJ nunca se exponen."""
+    datos = {
         "id": personaje["id"],
         "nombre": personaje["nombre"],
-        "velocidad": personaje["velocidad"],
-        "estilo": personaje["estilo"],
-        "bando": personaje.get("bando", ""),
+        "tipo": personaje.get("tipo", ""),
+        "velocidad": personaje.get("velocidad", 0),
+        "estilo": personaje.get("estilo", 0),
     }
+    datos.update(etiquetas_publicas(personaje))
+    if personaje.get("tipo") in TIPOS_JUGADOR:
+        datos.update(datos_ficha(personaje))
+    return datos
+
+
+def datos_privados(personaje):
+    datos = {
+        "id": personaje["id"],
+        "nombre": personaje["nombre"],
+        "tipo": personaje.get("tipo", ""),
+        "velocidad": personaje.get("velocidad", 0),
+        "estilo": personaje.get("estilo", 0),
+        "ataque": personaje.get("ataque", 0),
+        "defensa": personaje.get("defensa", 0),
+    }
+    datos.update(datos_ficha(personaje))
+    datos.update(etiquetas_publicas(personaje))
+    return datos
 
 
 def datos_turno_publicos(turno):
     """Los datos de combate secretos nunca viajan al navegador."""
-    return {
+    personaje = buscar_personaje(turno.get("id"))
+    datos = {
         "id": turno["id"],
         "nombre": turno["nombre"],
+        "tipo": turno.get("tipo", ""),
         "velocidad": turno["velocidad"],
-        "estilo": turno["estilo"],
-        "bando": turno.get("bando", ""),
+        "estilo": turno.get("estilo", 0),
         "roll": turno["roll"],
         "rolls": turno["rolls"],
         "tirada": turno["tirada"],
@@ -112,6 +198,11 @@ def datos_turno_publicos(turno):
         "surprise": turno.get("surprise", []),
         "tipo_sorpresa": turno.get("tipo_sorpresa"),
     }
+    if personaje:
+        datos.update(etiquetas_publicas(personaje))
+        if personaje.get("tipo") in TIPOS_JUGADOR:
+            datos.update(datos_ficha(personaje))
+    return datos
 
 
 def ronda_publica(ronda):
@@ -119,6 +210,13 @@ def ronda_publica(ronda):
         "ronda": ronda["ronda"],
         "turnos": [datos_turno_publicos(t) for t in ronda.get("turnos", [])],
     }
+
+
+async def enviar_personajes():
+    await broadcast({
+        "type": "personajes",
+        "data": [datos_personaje_publicos(p) for p in personajes],
+    })
 
 
 async def enviar_estado_inicial(ws: WebSocket):
@@ -174,61 +272,36 @@ async def websocket_endpoint(ws: WebSocket):
             message_type = data.get("type")
 
             if message_type == "add":
-                raw = data.get("personaje") or {}
-                nombre = str(raw.get("nombre", "")).strip()
-                if not nombre:
-                    await ws.send_json({"type": "error", "message": "El nombre es obligatorio."})
+                personaje, error = construir_personaje(data.get("personaje") or {})
+                if error:
+                    await ws.send_json({"type": "error", "message": error})
                     continue
 
-                try:
-                    velocidad = int(raw.get("velocidad", 0))
-                    estilo = int(raw.get("estilo", 0) or 0)
-                    ataque = int(raw.get("ataque", 0) or 0)
-                    ta = int(raw.get("ta", 0) or 0)
-                    parada = int(raw.get("parada", 0) or 0)
-                    esquiva = int(raw.get("esquiva", 0) or 0)
-                    dano = float(raw.get("dano", 0) or 0)
-                    vida = float(raw.get("vida", 0) or 0)
-                except (TypeError, ValueError):
-                    await ws.send_json({"type": "error", "message": "Los valores numéricos no son válidos."})
-                    continue
-
-                bando = str(raw.get("bando", "")).strip().lower()
-                if bando not in {"aliado", "enemigo", ""}:
-                    await ws.send_json({"type": "error", "message": "El bando no es válido."})
-                    continue
-
-                personaje = {
-                    "id": next_personaje_id,
-                    "nombre": nombre[:100],
-                    "velocidad": velocidad,
-                    "estilo": estilo,
-                    "bando": bando,
-                    "ataque": ataque,
-                    "ta": ta,
-                    "parada": parada,
-                    "esquiva": esquiva,
-                    "dano": dano,
-                    "vida": vida,
-                }
-                next_personaje_id += 1
                 personajes.append(personaje)
-
                 if rondas:
-                    for ronda in rondas[ronda_actual:]:
+                    # Sin turno en la ronda actual: entra a partir de la siguiente.
+                    for ronda in rondas[ronda_actual + 1:]:
                         ronda["turnos"].append(crear_turno_personaje(personaje))
                         recalcular_sorpresas(ronda["turnos"], ronda["ronda"])
 
-                await broadcast({"type": "add", "personaje": datos_personaje_publicos(personaje)})
+                await broadcast({
+                    "type": "add",
+                    "personaje": datos_personaje_publicos(personaje),
+                })
                 guardar_estado()
+                await enviar_personajes()
                 if rondas:
                     await enviar_ronda_actual()
+                await ws.send_json({"type": "character_saved"})
 
             elif message_type == "roll":
+                for personaje in personajes:
+                    personaje["a_la_defensiva"] = False
                 rondas = generar_iniciativa()
                 ronda_actual = 0
                 turno_actual = 0
                 guardar_estado()
+                await enviar_personajes()
                 await enviar_ronda_actual()
 
             elif message_type == "delete":
@@ -245,7 +318,9 @@ async def websocket_endpoint(ws: WebSocket):
                 normalizar_turno_actual()
                 await broadcast({"type": "delete", "id": personaje_id})
                 guardar_estado()
-                await enviar_ronda_actual()
+                await enviar_personajes()
+                if rondas:
+                    await enviar_ronda_actual()
 
             elif message_type == "set_active":
                 if not rondas:
@@ -273,10 +348,13 @@ async def websocket_endpoint(ws: WebSocket):
                     elif ronda_actual < len(rondas) - 1:
                         ronda_actual += 1
                         turno_actual = 0
+                        for personaje in personajes:
+                            personaje["a_la_defensiva"] = False
                 guardar_estado()
+                await enviar_personajes()
                 await enviar_ronda_actual()
 
-            elif message_type == "get_secret":
+            elif message_type == "get_character":
                 try:
                     personaje_id = int(data.get("id"))
                 except (TypeError, ValueError):
@@ -286,26 +364,28 @@ async def websocket_endpoint(ws: WebSocket):
                 if not personaje:
                     await ws.send_json({"type": "error", "message": "Personaje no encontrado."})
                     continue
-                await ws.send_json({"type": "secret", "personaje": personaje})
+                await ws.send_json({"type": "character", "personaje": datos_privados(personaje)})
 
-            elif message_type == "update_secret":
-                try:
-                    personaje_id = int(data.get("id"))
-                    personaje = buscar_personaje(personaje_id)
-                    if not personaje:
-                        raise ValueError
-                    personaje["ataque"] = int(data.get("ataque", 0) or 0)
-                    personaje["ta"] = int(data.get("ta", 0) or 0)
-                    personaje["parada"] = int(data.get("parada", 0) or 0)
-                    personaje["esquiva"] = int(data.get("esquiva", 0) or 0)
-                    personaje["dano"] = float(data.get("dano", 0) or 0)
-                    personaje["vida"] = float(data.get("vida", 0) or 0)
-                except (TypeError, ValueError):
-                    await ws.send_json({"type": "error", "message": "Datos secretos no válidos."})
+            elif message_type == "update_character":
+                error = actualizar_personaje(data)
+                if error:
+                    await ws.send_json({"type": "error", "message": error})
                     continue
                 guardar_estado()
-                await ws.send_json({"type": "secret", "personaje": personaje})
-                await broadcast({"type": "secret_updated", "personaje": datos_personaje_publicos(personaje)})
+                await enviar_personajes()
+                if rondas:
+                    await enviar_ronda_actual()
+                await ws.send_json({"type": "character_saved"})
+
+            elif message_type == "critical_level":
+                error = registrar_critico(data)
+                if error:
+                    await ws.send_json({"type": "error", "message": error})
+                    continue
+                guardar_estado()
+                await enviar_personajes()
+                if rondas:
+                    await enviar_ronda_actual()
 
             elif message_type == "attack":
                 resultado = resolver_ataque(data)
@@ -314,6 +394,9 @@ async def websocket_endpoint(ws: WebSocket):
                 else:
                     await broadcast({"type": "attack_result", "data": resultado})
                     guardar_estado()
+                    await enviar_personajes()
+                    if rondas:
+                        await enviar_ronda_actual()
 
             elif message_type == "counterattack":
                 resultado = resolver_ataque(data, contraataque=True)
@@ -322,6 +405,9 @@ async def websocket_endpoint(ws: WebSocket):
                 else:
                     await broadcast({"type": "attack_result", "data": resultado})
                     guardar_estado()
+                    await enviar_personajes()
+                    if rondas:
+                        await enviar_ronda_actual()
 
             elif message_type == "clear":
                 personajes.clear()
@@ -340,6 +426,134 @@ async def websocket_endpoint(ws: WebSocket):
     finally:
         if ws in clients:
             clients.remove(ws)
+
+
+def construir_personaje(raw):
+    global next_personaje_id
+    nombre = str(raw.get("nombre", "")).strip()
+    if not nombre:
+        return None, "El nombre es obligatorio."
+
+    tipo = str(raw.get("tipo", "")).strip().lower()
+    if tipo not in TIPOS_VALIDOS:
+        return None, "El tipo de personaje no es válido."
+
+    try:
+        velocidad = int(raw.get("velocidad", 0))
+        estilo = int(raw.get("estilo", 0) or 0)
+        vida = float(raw.get("vida", raw.get("vida_max")))
+        ta = int(raw.get("ta"))
+        zeon = float(raw.get("zeon", 0) or 0)
+        ki = float(raw.get("ki", 0) or 0)
+        dano = float(raw.get("dano", 0) or 0)
+        if tipo in TIPOS_ENEMIGO:
+            ataque = int(raw.get("ataque"))
+            defensa = int(raw.get("defensa"))
+        else:
+            ataque = 0
+            defensa = 0
+    except (TypeError, ValueError):
+        if tipo in TIPOS_ENEMIGO:
+            return None, "Revisa los valores. Vida, TA, Ataque y Defensa son obligatorios."
+        return None, "Revisa los valores. Puntos de Vida y TA son obligatorios."
+
+    personaje = {
+        "id": next_personaje_id,
+        "nombre": nombre[:100],
+        "tipo": tipo,
+        "velocidad": velocidad,
+        "vida_max": vida,
+        "vida_actual": vida,
+        "zeon": zeon,
+        "ki": ki,
+        "estilo": estilo,
+        "ta": ta,
+        "dano": dano,
+        "acumulacion": bool(raw.get("acumulacion", False)),
+        "ataque": ataque,
+        "defensa": defensa,
+        "criticos": [],
+        "a_la_defensiva": False,
+    }
+    next_personaje_id += 1
+    return personaje, None
+
+
+def actualizar_personaje(data):
+    try:
+        personaje_id = int(data.get("id"))
+    except (TypeError, ValueError):
+        return "ID de personaje no válido."
+    personaje = buscar_personaje(personaje_id)
+    if not personaje:
+        return "Personaje no encontrado."
+
+    if "nombre" in data:
+        nombre = str(data.get("nombre", "")).strip()
+        if not nombre:
+            return "El nombre es obligatorio."
+        if nombre != personaje["nombre"]:
+            renombrar_personaje(personaje_id, nombre[:100])
+
+    try:
+        if "velocidad" in data:
+            personaje["velocidad"] = int(data["velocidad"])
+        if "vida_max" in data:
+            personaje["vida_max"] = float(data["vida_max"])
+        if "vida_actual" in data:
+            personaje["vida_actual"] = float(data["vida_actual"])
+        if "zeon" in data:
+            personaje["zeon"] = float(data["zeon"])
+        if "ki" in data:
+            personaje["ki"] = float(data["ki"])
+        if "estilo" in data:
+            personaje["estilo"] = int(data["estilo"])
+        if "ta" in data:
+            personaje["ta"] = int(data["ta"])
+        if "dano" in data:
+            personaje["dano"] = float(data["dano"])
+    except (TypeError, ValueError):
+        return "Los valores numéricos no son válidos."
+
+    if personaje.get("tipo") in TIPOS_ENEMIGO:
+        try:
+            if "ataque" in data:
+                personaje["ataque"] = int(data["ataque"])
+            if "defensa" in data:
+                personaje["defensa"] = int(data["defensa"])
+        except (TypeError, ValueError):
+            return "El ataque o la defensa no son válidos."
+
+    if "acumulacion" in data:
+        personaje["acumulacion"] = bool(data["acumulacion"])
+
+    if personaje.get("vida_max", 0) < personaje.get("vida_actual", 0):
+        personaje["vida_actual"] = personaje["vida_max"]
+    return None
+
+
+def registrar_critico(data):
+    try:
+        personaje_id = int(data.get("id"))
+        nivel = int(data.get("level"))
+    except (TypeError, ValueError):
+        return "Nivel de crítico no válido."
+    personaje = buscar_personaje(personaje_id)
+    if not personaje:
+        return "Personaje no encontrado."
+    personaje.setdefault("criticos", []).append(nivel)
+    return None
+
+
+def renombrar_personaje(personaje_id, nombre):
+    personaje = buscar_personaje(personaje_id)
+    if not personaje:
+        return
+    personaje["nombre"] = nombre
+    for ronda in rondas:
+        for turno in ronda.get("turnos", []):
+            if turno["id"] == personaje_id:
+                turno["nombre"] = nombre
 
 
 async def enviar_ronda_actual():
@@ -387,7 +601,6 @@ def resolver_ataque(data, contraataque=False):
     try:
         atacante_id = int(data.get("attacker_id"))
         objetivo_id = int(data.get("target_id"))
-        numero = int(data.get("numero"))
     except (TypeError, ValueError):
         return {"error": "Datos de ataque no válidos."}
 
@@ -407,9 +620,31 @@ def resolver_ataque(data, contraataque=False):
     if atacante_id == objetivo_id:
         return {"error": "Un personaje no puede atacarse a sí mismo."}
 
-    defensa = objetivo["esquiva"] if data.get("defensa") == "esquiva" else objetivo["parada"]
-    ataque_base = atacante["ataque"]
-    porcentaje = ataque_base + numero - defensa
+    try:
+        numero = int(data.get("numero", 0) or 0)
+    except (TypeError, ValueError):
+        return {"error": "El número de ataque no es válido."}
+
+    # Jugador/aliado introduce el número limpio; enemigo/PNJ usa su Ataque guardado.
+    if atacante.get("tipo") in TIPOS_ENEMIGO:
+        ataque_final = int(atacante.get("ataque", 0) or 0) + numero
+        ataque_detalle = f"{atacante.get('ataque', 0)} + {numero}"
+    else:
+        ataque_final = numero
+        ataque_detalle = f"{numero} (limpio)"
+
+    # Enemigo/PNJ defiende con su Defensa guardada; jugador/aliado introduce la suya limpia.
+    if objetivo.get("tipo") in TIPOS_JUGADOR:
+        try:
+            defensa = int(data.get("defensa_numero", 0) or 0)
+        except (TypeError, ValueError):
+            return {"error": "La defensa limpia no es válida."}
+        defensa_detalle = f"{defensa} (limpia)"
+    else:
+        defensa = int(objetivo.get("defensa", 0) or 0)
+        defensa_detalle = f"{defensa}"
+
+    porcentaje = ataque_final - defensa
     sorpresa = tiene_sorpresa(atacante_id, objetivo_id)
 
     resultado = {
@@ -418,9 +653,10 @@ def resolver_ataque(data, contraataque=False):
         "atacante": atacante["nombre"],
         "objetivo": objetivo["nombre"],
         "numero": numero,
-        "ataque_base": ataque_base,
+        "ataque_final": ataque_final,
+        "ataque_detalle": ataque_detalle,
         "defensa": defensa,
-        "tipo_defensa": data.get("defensa", "parada"),
+        "defensa_detalle": defensa_detalle,
         "porcentaje": porcentaje,
         "contraataque": contraataque,
         "sorpresa": sorpresa,
@@ -438,18 +674,33 @@ def resolver_ataque(data, contraataque=False):
         resultado["mensaje"] = f"Golpe fallido por {resultado['fallo']}%."
         return resultado
 
-    porcentaje_post_ta = max(0, porcentaje - objetivo["ta"] * 10)
-    dano = atacante.get("dano", 0)
-    dano_total = dano * porcentaje_post_ta / 100
+    ta = int(objetivo.get("ta", 0) or 0)
+    porcentaje_post_ta = max(0, porcentaje - ta * 10)
+    dano_base = atacante.get("dano", 0) or 0
+    dano_total = dano_base * porcentaje_post_ta / 100
+
+    vida_antes = objetivo.get("vida_actual", 0) or 0
+    objetivo["vida_actual"] = vida_antes - dano_total
+
+    if not objetivo.get("acumulacion"):
+        objetivo["a_la_defensiva"] = True
+
+    critico = vida_antes > 0 and dano_total >= 0.5 * vida_antes
+    caido = objetivo["vida_actual"] <= 0
 
     resultado.update({
         "estado": "golpe",
-        "ta": objetivo["ta"],
+        "impacto": True,
+        "ta": ta,
         "porcentaje_post_ta": porcentaje_post_ta,
-        "dano_base": atacante.get("dano", 0),
+        "dano_base": dano_base,
         "dano_total": dano_total,
-        "vida_objetivo": objetivo["vida"],
-        "mensaje": f"Golpe: {porcentaje_post_ta}% de {atacante.get('dano', 0)} = {dano_total:g} daño.",
+        "vida_antes": vida_antes,
+        "vida_actual": objetivo["vida_actual"],
+        "critico": critico,
+        "caido": caido,
+        "a_la_defensiva": objetivo.get("a_la_defensiva", False),
+        "mensaje": f"Golpe: {porcentaje_post_ta}% de {dano_base:g} = {dano_total:g} daño.",
     })
     return resultado
 
@@ -494,9 +745,9 @@ def crear_turno_personaje(personaje):
     return {
         "id": personaje["id"],
         "nombre": personaje["nombre"],
+        "tipo": personaje.get("tipo", ""),
         "velocidad": personaje["velocidad"],
-        "estilo": personaje["estilo"],
-        "bando": personaje.get("bando", ""),
+        "estilo": personaje.get("estilo", 0),
         "roll": rolls[0],
         "rolls": rolls,
         "tirada": tirada,

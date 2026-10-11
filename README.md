@@ -1,31 +1,55 @@
 # Combat Turn Simulator
-Aplicacion web en Python para calcular la iniciativa de combate durante 25 rondas.
 
-## Descripcion
+Aplicación web en Python para gestionar la iniciativa y resolver combates por turnos durante 25 rondas.
 
-La aplicacion permite anadir personajes con estos datos:
+## Descripción
 
-- `nombre`
-- `velocidad`
-- `estilo`
+La aplicación permite añadir personajes de cuatro tipos:
 
-En cada ronda, cada personaje realiza una tirada de `d100` que se suma a su velocidad base. La iniciativa usa estas reglas especiales:
+- **Jugador** y **Aliado**: no guardan Ataque ni Defensa. Atacan introduciendo el **número limpio** (ya con sus bonos y malus calculados) y defienden introduciendo su **defensa limpia** cuando son el objetivo.
+- **Enemigo** y **PNJ**: guardan Ataque y Defensa en su creación. Al atacar usan su Ataque guardado (más un número adicional) y al defender usan su Defensa guardada.
 
-- Si el primer resultado es `90-100`, hay tirada abierta y se vuelve a lanzar.
-- Tras una abierta, el nuevo umbral sube a `91-100`, luego `92-100` y asi sucesivamente hasta `100-100`.
-- Si el primer resultado es `1`, la tirada pasa a `-125`.
-- Si el primer resultado es `2`, la tirada pasa a `-100`.
-- Si el primer resultado es `3`, la tirada pasa a `-75`.
+Campos comunes: `nombre`, `velocidad` (iniciativa), `puntos de vida`, `zeon`, `ki`, `estilo`, `TA`, `daño` y un check de `acumulación`. `Puntos de Vida` y `TA` son obligatorios; en Enemigo/PNJ también lo son `Ataque` y `Defensa`.
 
-La version web tambien calcula:
+## Iniciativa
 
-- Sorpresa entre personajes segun la diferencia de iniciativa.
-- Umbrales especiales basados en `estilo` durante la ronda 1.
-- Tipos de sorpresa como `DIF`, `MDF`, `ABS`, `CIM`, `IMP`, `INH` y `ZEN`.
+En cada ronda cada personaje realiza una tirada de `d100` que se suma a su velocidad base:
 
-La comunicacion entre cliente y servidor se hace en tiempo real mediante `WebSocket`.
+- Primer resultado `90-100`: tirada abierta, se vuelve a lanzar subiendo el umbral (`91-100`, `92-100`, ... hasta `100-100`).
+- Resultados `1`, `2` y `3` se convierten en `-125`, `-100` y `-75` respectivamente.
 
-## Como ejecutarlo
+Se generan **25 rondas** de una vez y se avanza por ellas. El botón **Siguiente personaje** pasa el marcador de turno al siguiente personaje y, al terminar la ronda, pasa a la siguiente ronda automáticamente.
+
+La sorpresa entre personajes se calcula por diferencia de iniciativa y umbrales de `estilo` en la ronda 1 (`DIF`, `MDF`, `ABS`, `CIM`, `IMP`, `INH`, `ZEN`).
+
+## Combate
+
+El personaje activo puede lanzar una **acción ofensiva** contra cualquier otro personaje de la ronda.
+
+- **Enemigo/PNJ ataca**: `ataque_final = Ataque guardado + número`.
+- **Jugador/Aliado ataca**: `ataque_final = número limpio`.
+- **Defensa**: si el objetivo es Enemigo/PNJ se usa su Defensa guardada; si es Jugador/Aliado, la defensa limpia que introduce.
+
+`porcentaje = ataque_final - defensa`. Un resultado positivo es impacto (aunque el daño final sea 0); `0` o menos es fallo; `-10` o menos ofrece **contraataque**.
+
+En un impacto se aplica la `TA` del objetivo (`TA × 10`) y el daño se calcula como `daño_base × porcentaje_post_TA / 100`, restándose de la vida actual.
+
+### Estados y etiquetas
+
+- **A la Defensiva** (tarjeta azul claro): el personaje impactado la recibe, salvo que tenga marcada la `Acumulación`. Se limpia al terminar la ronda.
+- **Crítico**: si el daño de un golpe es `≥ 50%` de la vida actual del objetivo, salta una ventana roja que pide el **Nivel de Crítico** (mostrando el daño recibido). El nivel se muestra como etiqueta negativa, p. ej. `-5`.
+- **Débil**: la vida está por debajo del 30% de la vida máxima.
+- **Caído**: la vida llega a 0 o menos. Aparece un aviso con la opción de retirar al personaje del combate (su tarjeta desaparece) o mantenerlo.
+
+## Fichas y pestañas
+
+Además de **Preparación** y **Combate**, cada **Jugador/Aliado** tiene su propia pestaña que funciona como ficha: muestra vida, zeon, ki, estilo, TA, daño y sus etiquetas, y permite editar sus datos. Cuando es su turno, la ficha indica **"Es tu turno"** y ofrece la acción ofensiva.
+
+Las tarjetas del orden de turnos colorean su borde según el tipo cuando están activas: verde (Jugador/Aliado), amarillo (PNJ) y rojo (Enemigo). Los datos de combate de Enemigos y PNJ están ocultos en sus fichas (solo se muestran sus etiquetas); se abren mediante el botón de edición para consultarlos o cambiarlos.
+
+Se puede añadir un personaje nuevo en cualquier momento: queda sin turno durante la ronda en curso y se incorpora con normalidad a partir de la siguiente.
+
+## Cómo ejecutarlo
 
 1. Instala las dependencias:
    ```bash
@@ -42,31 +66,19 @@ La comunicacion entre cliente y servidor se hace en tiempo real mediante `WebSoc
    python -m uvicorn server:app --reload --host 0.0.0.0 --port 8000
    ```
 
-3. Abre la aplicacion en el navegador:
+3. Abre la aplicación en el navegador:
    - Local: [http://localhost:8000](http://localhost:8000)
    - Red local: `http://TU_IP:8000`
 
 ## Estructura
 
-- `server.py`: servidor FastAPI y logica de iniciativa.
-- `templates/index.html`: interfaz principal.
-- `static/script.js`: cliente WebSocket y renderizado de rondas.
-- `static/style.css`: estilos basicos y adaptacion movil.
+- `server.py`: servidor FastAPI, WebSocket y toda la lógica de iniciativa y combate.
+- `templates/index.html`: interfaz principal y modales.
+- `static/script.js`: cliente WebSocket, pestañas/fichas y renderizado de rondas.
+- `static/style.css`: estilos, estados y adaptación móvil.
 
 ## Requisitos
 
 - Python 3.x
 - FastAPI
 - Uvicorn
-## Combate y ataques
-
-La interfaz incluye una pestaña de **Combate** separada de la preparación. Al pulsar sobre un personaje en preparación se pueden editar sus datos privados de combate: `Ataque`, `TA`, `Parada`, `Esquiva`, `Daño` y `Vida`. Estos valores no se muestran en las tarjetas públicas ni se envían al cliente salvo cuando se abre su editor privado.
-
-Durante el combate cada personaje recibe un marcador de turno. El personaje activo puede realizar una acción de ataque seleccionando un objetivo, una defensa (`Parada` o `Esquiva`) y un número. El servidor calcula `Ataque + número - defensa`. Con resultado positivo se aplica TA (`TA x 10`) y se calcula el daño porcentual sobre el daño base del atacante. Los resultados de `0` o menos son fallos; a partir de `-10` se ofrece un contraataque.
-
-La pantalla de ataque también avisa si existe sorpresa entre atacante y objetivo en la ronda actual. El botón **Siguiente personaje** avanza el marcador y, al terminar la ronda, pasa automáticamente a la siguiente.
-
-### Personaje activo
-La pestaña Combate permite cambiar manualmente el personaje activo con **Hacer activo**. El botón **Siguiente personaje** continúa avanzando por el orden de iniciativa y también cambia el activo.
-
-Los personajes de la pestaña **Preparación** permanecen visibles después de generar la iniciativa para poder seguir consultando y editando sus datos secretos.

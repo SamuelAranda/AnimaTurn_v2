@@ -4,49 +4,35 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Combat Tracker</title>
-<link rel="stylesheet" href="/static/style.css">
-<script src="/static/script.js" defer></script>
+<link rel="stylesheet" href="/static/style.css?v=3">
+<script src="/static/script.js?v=3" defer></script>
 </head>
 <body>
 <div class="page-shell">
-<div class="page-backdrop"></div>
-<header class="hero">
-  <div class="hero-copy">
+<header class="masthead">
+  <div class="brand-copy">
     <p class="eyebrow">Anima Combat Console</p>
     <h1>Combat Tracker</h1>
-    <p class="hero-text">Gestiona la iniciativa, controla las sorpresas y resuelve los ataques sin perder tiempo entre rondas.</p>
   </div>
-  <div class="hero-panel">
-    <div class="hero-stat"><span class="hero-stat-label">Modo</span><strong>Sesión táctica</strong></div>
-    <div class="hero-stat"><span class="hero-stat-label">Flujo</span><strong>Tiempo real</strong></div>
-  </div>
+  <nav class="tabs" aria-label="Secciones">
+    <button class="tab-button active" data-tab="preparacion" type="button">Preparación</button>
+    <button class="tab-button" data-tab="combate" type="button">Combate</button>
+    <div id="tabs-jugadores" class="tabs-jugadores"></div>
+  </nav>
 </header>
-
-<nav class="tabs" aria-label="Secciones">
-  <button class="tab-button active" data-tab="preparacion" type="button">Preparación</button>
-  <button class="tab-button" data-tab="combate" type="button">Combate</button>
-</nav>
 
 <main>
 <section id="tab-preparacion" class="tab-panel active">
   <div class="layout">
     <section class="control-panel">
       <div class="panel-heading"><p class="section-kicker">Preparación</p><h2>Configurar personajes</h2></div>
-      <div class="form-grid">
-        <label class="field"><span>Nombre</span><input id="nombre" type="text" placeholder="Ej. Alis Testarossa"></label>
-        <label class="field"><span>Velocidad</span><input id="velocidad" type="number" inputmode="numeric" placeholder="0"></label>
-        <label class="field"><span>Estilo</span><input id="estilo" type="number" inputmode="numeric" value="0"></label>
-      </div>
-      <div class="bando-selector"><span class="selector-label">Bando</span><div class="selector-options">
-        <label class="selector-pill"><input type="radio" name="bando" value="aliado"> <span>Aliado</span></label>
-        <label class="selector-pill"><input type="radio" name="bando" value="enemigo"> <span>Enemigo</span></label>
-      </div></div>
-      <div class="action-row"><button class="primary-button" onclick="add()">Añadir personaje</button><button class="accent-button" onclick="roll()">Generar iniciativa</button></div>
+      <div class="action-row single"><button class="primary-button" onclick="openAddModal()">Añadir personaje</button></div>
+      <div class="action-row"><button class="accent-button" onclick="roll()">Generar iniciativa</button></div>
       <div class="action-row secondary-actions"><button class="secondary-button" onclick="openCombatTab()">Ir al combate</button><button class="ghost-button" onclick="clearSession()">Limpiar sesión</button></div>
     </section>
     <section class="battle-panel">
       <div class="panel-heading compact"><p class="section-kicker">Escuadra</p><h2>Personajes en reserva</h2></div>
-      <p class="secret-note">Pulsa un personaje para configurar sus datos secretos de combate.</p>
+      <p class="secret-note">Pulsa un personaje para abrir su ficha (Jugador/Aliado) o sus datos privados (Enemigo/PNJ).</p>
       <div id="personajes"></div>
     </section>
   </div>
@@ -58,26 +44,52 @@
       <div><p class="section-kicker">Combate</p><h2>Orden de turnos</h2></div>
       <div id="estado-ronda" class="round-badge">Pendiente de generar</div>
     </div>
-    <div id="turno-activo" class="active-turn-banner">Genera la iniciativa para comenzar.</div>
+    <div class="turn-banner-row">
+      <div id="turno-activo" class="active-turn-banner">Genera la iniciativa para comenzar.</div>
+      <button id="next-turn-button" class="accent-button next-turn-button" type="button" onclick="nextRound()" disabled>Pasar turno</button>
+    </div>
     <div id="resultado"></div>
   </section>
 </section>
+
+<div id="panels-jugadores"></div>
 </main>
 
-<div id="secret-modal" class="modal hidden" aria-hidden="true">
-  <div class="modal-backdrop" onclick="closeSecretModal()"></div>
-  <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="secret-title">
-    <div class="modal-header"><div><p class="section-kicker">Datos privados</p><h2 id="secret-title">Personaje</h2></div><button class="close-button" onclick="closeSecretModal()" aria-label="Cerrar">×</button></div>
-    <p class="secret-note">Estos valores se guardan en el servidor y no se muestran en la lista pública.</p>
-    <div class="form-grid secret-grid">
-      <label class="field"><span>Ataque</span><input id="secret-ataque" type="number"></label>
-      <label class="field"><span>TA · Tipo de armadura</span><input id="secret-ta" type="number"></label>
-      <label class="field"><span>Parada</span><input id="secret-parada" type="number"></label>
-      <label class="field"><span>Esquiva</span><input id="secret-esquiva" type="number"></label>
-      <label class="field"><span>Daño</span><input id="secret-dano" type="number" step="0.01"></label>
-      <label class="field"><span>Vida</span><input id="secret-vida" type="number" step="0.01"></label>
+<div id="character-modal" class="modal hidden" aria-hidden="true">
+  <div class="modal-backdrop" onclick="closeCharacterModal()"></div>
+  <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="character-title">
+    <div class="modal-header">
+      <div><p class="section-kicker" id="character-kicker">Nuevo personaje</p><h2 id="character-title">Añadir personaje</h2></div>
+      <button class="close-button" onclick="closeCharacterModal()" aria-label="Cerrar">×</button>
     </div>
-    <div class="action-row"><button class="accent-button" onclick="saveSecretData()">Guardar</button><button class="ghost-button" onclick="closeSecretModal()">Cancelar</button></div>
+    <div class="bando-selector" id="tipo-selector">
+      <span class="selector-label">Tipo de personaje</span>
+      <div class="selector-options">
+        <label class="selector-pill"><input type="radio" name="tipo" value="jugador"> <span>Jugador</span></label>
+        <label class="selector-pill"><input type="radio" name="tipo" value="aliado"> <span>Aliado</span></label>
+        <label class="selector-pill"><input type="radio" name="tipo" value="enemigo"> <span>Enemigo</span></label>
+        <label class="selector-pill"><input type="radio" name="tipo" value="pnj"> <span>PNJ</span></label>
+      </div>
+      <p class="tipo-hint" id="tipo-hint"></p>
+    </div>
+    <div class="form-grid secret-grid">
+      <label class="field"><span>Nombre</span><input id="char-nombre" type="text" placeholder="Ej. Alis Testarossa"></label>
+      <label class="field"><span>Velocidad</span><input id="char-velocidad" type="number" inputmode="numeric" placeholder="0"></label>
+      <label class="field"><span>Puntos de Vida</span><input id="char-vida-max" type="number" step="0.01" placeholder="0"></label>
+      <label class="field" id="char-vida-actual-field"><span>Vida actual</span><input id="char-vida-actual" type="number" step="0.01"></label>
+      <label class="field"><span>Zeon</span><input id="char-zeon" type="number" step="0.01" value="0"></label>
+      <label class="field"><span>Ki</span><input id="char-ki" type="number" step="0.01" value="0"></label>
+      <label class="field"><span>Estilo</span><input id="char-estilo" type="number" inputmode="numeric" value="0"></label>
+      <label class="field"><span>TA</span><input id="char-ta" type="number" inputmode="numeric" placeholder="0"></label>
+      <label class="field"><span>Daño base</span><input id="char-dano" type="number" step="0.01" value="0"></label>
+      <label class="field checkbox-field"><span>Acumulación</span><input id="char-acumulacion" type="checkbox"></label>
+    </div>
+    <div class="form-grid secret-grid" id="char-enemigo-fields">
+      <label class="field"><span>Ataque</span><input id="char-ataque" type="number" inputmode="numeric" placeholder="0"></label>
+      <label class="field"><span>Defensa</span><input id="char-defensa" type="number" inputmode="numeric" placeholder="0"></label>
+    </div>
+    <p class="formula-hint">Puntos de Vida y TA son obligatorios. Enemigos y PNJ también requieren Ataque y Defensa.</p>
+    <div class="action-row"><button class="accent-button" onclick="saveCharacterModal()">Guardar</button><button class="ghost-button" onclick="closeCharacterModal()">Cancelar</button></div>
   </section>
 </div>
 
@@ -87,9 +99,10 @@
     <div class="modal-header"><div><p class="section-kicker">Acción</p><h2 id="attack-title">Atacar</h2></div><button class="close-button" onclick="closeAttackModal()" aria-label="Cerrar">×</button></div>
     <div id="surprise-warning" class="surprise-warning hidden"></div>
     <label class="field"><span>Objetivo</span><select id="attack-target"></select></label>
-    <label class="field"><span>Defensa</span><select id="attack-defense"><option value="parada">Parada</option><option value="esquiva">Esquiva</option></select></label>
-    <label class="field"><span>Número de ataque</span><input id="attack-number" type="number" inputmode="numeric" placeholder="125"></label>
-    <p class="formula-hint">Ataque + número − Parada/Esquiva = porcentaje final.</p>
+    <label class="field" id="attack-defense-field"><span>Defensa del objetivo</span><select id="attack-defense"><option value="parada">Parada</option><option value="esquiva">Esquiva</option></select></label>
+    <label class="field" id="attack-defensa-numero-field"><span>Defensa limpia del objetivo</span><input id="attack-defensa-numero" type="number" inputmode="numeric" placeholder="0"></label>
+    <label class="field"><span id="attack-number-label">Número de ataque</span><input id="attack-number" type="number" inputmode="numeric" placeholder="0"></label>
+    <p class="formula-hint" id="attack-formula-hint">Ataque + número − Defensa = porcentaje final.</p>
     <div class="action-row"><button class="accent-button" onclick="performAttack()">Resolver ataque</button><button class="ghost-button" onclick="closeAttackModal()">Cancelar</button></div>
   </section>
 </div>
@@ -99,7 +112,26 @@
   <section class="modal-card result-card" role="dialog" aria-modal="true" aria-labelledby="result-title">
     <div class="modal-header"><div><p class="section-kicker">Resultado</p><h2 id="result-title">Ataque</h2></div><button class="close-button" onclick="closeResultModal()" aria-label="Cerrar">×</button></div>
     <div id="attack-result"></div>
-    <div id="counterattack-area" class="counterattack-area hidden"><p>El fallo es de 10% o más. El objetivo puede realizar un contraataque.</p><button class="secondary-button" onclick="openCounterattack()">Contraatacar</button><button class="ghost-button" onclick="closeResultModal()">No contraatacar</button></div>
+    <div id="counterattack-area" class="counterattack-area hidden"><p>El fallo es de 10% o más. El objetivo puede realizar un contraataque.</p><button class="secondary-button" onclick="openCounterattack()">Contraataque</button><button class="ghost-button" onclick="closeResultModal()">No contraatacar</button></div>
+  </section>
+</div>
+
+<div id="critical-modal" class="modal hidden" aria-hidden="true">
+  <div class="modal-backdrop"></div>
+  <section class="modal-card critical-card" role="dialog" aria-modal="true" aria-labelledby="critical-title">
+    <div class="modal-header"><div><p class="section-kicker">¡Crítico!</p><h2 id="critical-title">Nivel de crítico</h2></div><button class="close-button" onclick="closeCriticalModal()" aria-label="Cerrar">×</button></div>
+    <p id="critical-text" class="critical-text"></p>
+    <label class="field"><span>Nivel de crítico</span><input id="critical-level" type="number" inputmode="numeric" placeholder="5"></label>
+    <div class="action-row"><button class="accent-button" onclick="saveCriticalLevel()">Aplicar crítico</button><button class="ghost-button" onclick="closeCriticalModal()">Omitir</button></div>
+  </section>
+</div>
+
+<div id="fallen-modal" class="modal hidden" aria-hidden="true">
+  <div class="modal-backdrop"></div>
+  <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="fallen-title">
+    <div class="modal-header"><div><p class="section-kicker">Combate</p><h2 id="fallen-title">Personaje caído</h2></div><button class="close-button" onclick="closeFallenModal()" aria-label="Cerrar">×</button></div>
+    <p id="fallen-text" class="fallen-text"></p>
+    <div class="action-row"><button class="secondary-button" onclick="retirarCaido()">Retirar del combate</button><button class="ghost-button" onclick="closeFallenModal()">Mantener en combate</button></div>
   </section>
 </div>
 
