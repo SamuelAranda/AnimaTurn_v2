@@ -23,6 +23,11 @@ TIPOS_JUGADOR = {"jugador", "aliado"}
 TIPOS_ENEMIGO = {"enemigo", "pnj"}
 TIPOS_VALIDOS = TIPOS_JUGADOR | TIPOS_ENEMIGO
 
+# Colores admitidos para los Estados/Tags personalizados.
+ESTADOS_COLORES = {"rojo", "verde", "amarillo", "azul", "naranja", "morado"}
+ESTADOS_MAX = 20
+ESTADO_TEXTO_MAX = 24
+
 
 async def broadcast(message):
     disconnected = []
@@ -102,6 +107,7 @@ def migrar_personaje(personaje):
     personaje.setdefault("acumulacion", False)
     personaje.setdefault("criticos", [])
     personaje.setdefault("a_la_defensiva", False)
+    personaje.setdefault("estados", [])
 
     for obsoleto in ("bando", "vida", "parada", "esquiva"):
         personaje.pop(obsoleto, None)
@@ -130,6 +136,16 @@ def esta_caido(personaje):
     return (personaje.get("vida_actual", 0) or 0) <= 0
 
 
+def ta_efectiva(personaje, reduccion=0):
+    """TA interna: siempre mínimo 1, aunque el personaje tenga TA 0.
+
+    La reducción de armadura del ataque baja la TA enemiga, sin bajarla nunca de 1.
+    """
+    ta = int(personaje.get("ta", 0) or 0)
+    reduccion = max(0, int(reduccion or 0))
+    return max(1, ta - reduccion)
+
+
 def datos_ficha(personaje):
     """Datos de combate completos. Solo públicos para jugador/aliado."""
     return {
@@ -147,6 +163,7 @@ def etiquetas_publicas(personaje):
         "acumulacion": personaje.get("acumulacion", False),
         "a_la_defensiva": personaje.get("a_la_defensiva", False),
         "criticos": personaje.get("criticos", []),
+        "estados": personaje.get("estados", []),
         "debil": esta_debil(personaje),
         "caido": esta_caido(personaje),
     }
@@ -350,6 +367,8 @@ async def websocket_endpoint(ws: WebSocket):
                         turno_actual = 0
                         for personaje in personajes:
                             personaje["a_la_defensiva"] = False
+                        # Reconsulta velocidad/estilo y vuelve a tirar la ronda que entra.
+                        regenerar_ronda(ronda_actual)
                 guardar_estado()
                 await enviar_personajes()
                 await enviar_ronda_actual()
@@ -379,6 +398,16 @@ async def websocket_endpoint(ws: WebSocket):
 
             elif message_type == "critical_level":
                 error = registrar_critico(data)
+                if error:
+                    await ws.send_json({"type": "error", "message": error})
+                    continue
+                guardar_estado()
+                await enviar_personajes()
+                if rondas:
+                    await enviar_ronda_actual()
+
+            elif message_type == "set_estados":
+                error = actualizar_estados(data)
                 if error:
                     await ws.send_json({"type": "error", "message": error})
                     continue
@@ -474,6 +503,7 @@ def construir_personaje(raw):
         "defensa": defensa,
         "criticos": [],
         "a_la_defensiva": False,
+        "estados": [],
     }
     next_personaje_id += 1
     return personaje, None
@@ -542,6 +572,35 @@ def registrar_critico(data):
     if not personaje:
         return "Personaje no encontrado."
     personaje.setdefault("criticos", []).append(nivel)
+    return None
+
+
+def actualizar_estados(data):
+    """Sustituye los Estados/Tags personalizados de un personaje (texto alfanumérico + color)."""
+    try:
+        personaje_id = int(data.get("id"))
+    except (TypeError, ValueError):
+        return "ID de personaje no válido."
+    personaje = buscar_personaje(personaje_id)
+    if not personaje:
+        return "Personaje no encontrado."
+
+    estados_raw = data.get("estados")
+    if not isinstance(estados_raw, list):
+        return "Los estados no son válidos."
+
+    estados = []
+    for estado in estados_raw[:ESTADOS_MAX]:
+        if not isinstance(estado, dict):
+            continue
+        texto = str(estado.get("texto", "")).strip()
+        if not texto:
+            continue
+        color = str(estado.get("color", "")).strip().lower()
+        if color not in ESTADOS_COLORES:
+            color = "azul"
+        estados.append({"texto": texto[:ESTADO_TEXTO_MAX], "color": color})
+    personaje["estados"] = estados
     return None
 
 
@@ -625,6 +684,11 @@ def resolver_ataque(data, contraataque=False):
     except (TypeError, ValueError):
         return {"error": "El número de ataque no es válido."}
 
+    try:
+        reduccion_armadura = max(0, int(data.get("reduccion_armadura", 0) or 0))
+    except (TypeError, ValueError):
+        return {"error": "La reducción de armadura no es válida."}
+
     # Jugador/aliado introduce el número limpio; enemigo/PNJ usa su Ataque guardado.
     if atacante.get("tipo") in TIPOS_ENEMIGO:
         ataque_final = int(atacante.get("ataque", 0) or 0) + numero
@@ -675,7 +739,8 @@ def resolver_ataque(data, contraataque=False):
         return resultado
 
     ta = int(objetivo.get("ta", 0) or 0)
-    porcentaje_post_ta = max(0, porcentaje - ta * 10)
+    ta_aplicada = ta_efectiva(objetivo, reduccion_armadura)
+    porcentaje_post_ta = max(0, porcentaje - ta_aplicada * 10)
     dano_base = atacante.get("dano", 0) or 0
     dano_total = dano_base * porcentaje_post_ta / 100
 
@@ -685,13 +750,16 @@ def resolver_ataque(data, contraataque=False):
     if not objetivo.get("acumulacion"):
         objetivo["a_la_defensiva"] = True
 
-    critico = vida_antes > 0 and dano_total >= 0.5 * vida_antes
+    # Primero se evalúa la caída: si la vida llega a 0 no se ofrece crítico.
     caido = objetivo["vida_actual"] <= 0
+    critico = (not caido) and vida_antes > 0 and dano_total >= 0.5 * vida_antes
 
     resultado.update({
         "estado": "golpe",
         "impacto": True,
         "ta": ta,
+        "reduccion_armadura": reduccion_armadura,
+        "ta_efectiva": ta_aplicada,
         "porcentaje_post_ta": porcentaje_post_ta,
         "dano_base": dano_base,
         "dano_total": dano_total,
@@ -802,6 +870,16 @@ def generar_iniciativa():
         recalcular_sorpresas(turnos, ronda)
         todas_rondas.append({"ronda": ronda, "turnos": turnos})
     return todas_rondas
+
+
+def regenerar_ronda(indice):
+    """Reconsulta velocidad/estilo actuales y vuelve a tirar la iniciativa de esa ronda."""
+    if not rondas or indice >= len(rondas):
+        return
+    numero = rondas[indice].get("ronda", indice + 1)
+    turnos = [crear_turno_personaje(p) for p in personajes]
+    recalcular_sorpresas(turnos, numero)
+    rondas[indice] = {"ronda": numero, "turnos": turnos}
 
 
 if __name__ == "__main__":

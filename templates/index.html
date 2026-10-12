@@ -4,15 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Combat Tracker</title>
-<link rel="stylesheet" href="/static/style.css?v=3">
-<script src="/static/script.js?v=3" defer></script>
+<link rel="stylesheet" href="/static/style.css?v=4">
+<script src="/static/script.js?v=4" defer></script>
 </head>
 <body>
 <div class="page-shell">
 <header class="masthead">
-  <div class="brand-copy">
-    <p class="eyebrow">Anima Combat Console</p>
-    <h1>Combat Tracker</h1>
+  <div class="masthead-top">
+    <div class="brand-copy">
+      <p class="eyebrow">Anima Combat Console</p>
+      <h1>Combat Tracker</h1>
+    </div>
+    <label class="gm-switch">
+      <input type="checkbox" id="gm-toggle">
+      <span class="gm-switch-track" aria-hidden="true"></span>
+      <span class="gm-switch-label">Modo GM</span>
+    </label>
   </div>
   <nav class="tabs" aria-label="Secciones">
     <button class="tab-button active" data-tab="preparacion" type="button">Preparación</button>
@@ -102,6 +109,7 @@
     <label class="field" id="attack-defense-field"><span>Defensa del objetivo</span><select id="attack-defense"><option value="parada">Parada</option><option value="esquiva">Esquiva</option></select></label>
     <label class="field" id="attack-defensa-numero-field"><span>Defensa limpia del objetivo</span><input id="attack-defensa-numero" type="number" inputmode="numeric" placeholder="0"></label>
     <label class="field"><span id="attack-number-label">Número de ataque</span><input id="attack-number" type="number" inputmode="numeric" placeholder="0"></label>
+    <label class="field"><span>Reducción de armadura</span><input id="attack-reduccion" type="number" inputmode="numeric" value="0"></label>
     <p class="formula-hint" id="attack-formula-hint">Ataque + número − Defensa = porcentaje final.</p>
     <div class="action-row"><button class="accent-button" onclick="performAttack()">Resolver ataque</button><button class="ghost-button" onclick="closeAttackModal()">Cancelar</button></div>
   </section>
@@ -132,6 +140,26 @@
     <div class="modal-header"><div><p class="section-kicker">Combate</p><h2 id="fallen-title">Personaje caído</h2></div><button class="close-button" onclick="closeFallenModal()" aria-label="Cerrar">×</button></div>
     <p id="fallen-text" class="fallen-text"></p>
     <div class="action-row"><button class="secondary-button" onclick="retirarCaido()">Retirar del combate</button><button class="ghost-button" onclick="closeFallenModal()">Mantener en combate</button></div>
+  </section>
+</div>
+
+<div id="estado-modal" class="modal hidden" aria-hidden="true">
+  <div class="modal-backdrop" onclick="closeEstadoModal()"></div>
+  <section class="modal-card estado-card" role="dialog" aria-modal="true" aria-labelledby="estado-title">
+    <div class="modal-header"><div><p class="section-kicker">Estados / Tags</p><h2 id="estado-title">Estados de personaje</h2></div><button class="close-button" onclick="closeEstadoModal()" aria-label="Cerrar">×</button></div>
+    <div id="estado-list" class="estado-list"></div>
+    <label class="field"><span>Texto del estado</span><input id="estado-texto" type="text" maxlength="24" placeholder="Ej. Quemado, Aturdido, +2 Ataque"></label>
+    <div class="field"><span>Color</span>
+      <div class="color-swatches" id="estado-colores">
+        <button type="button" class="swatch color-rojo" data-color="rojo" onclick="selectEstadoColor('rojo')" aria-label="Rojo"></button>
+        <button type="button" class="swatch color-verde" data-color="verde" onclick="selectEstadoColor('verde')" aria-label="Verde"></button>
+        <button type="button" class="swatch color-amarillo" data-color="amarillo" onclick="selectEstadoColor('amarillo')" aria-label="Amarillo"></button>
+        <button type="button" class="swatch color-azul selected" data-color="azul" onclick="selectEstadoColor('azul')" aria-label="Azul"></button>
+        <button type="button" class="swatch color-naranja" data-color="naranja" onclick="selectEstadoColor('naranja')" aria-label="Naranja"></button>
+        <button type="button" class="swatch color-morado" data-color="morado" onclick="selectEstadoColor('morado')" aria-label="Morado"></button>
+      </div>
+    </div>
+    <div class="action-row"><button class="accent-button" onclick="addEstado()">Añadir estado</button><button class="ghost-button" onclick="closeEstadoModal()">Cerrar</button></div>
   </section>
 </div>
 

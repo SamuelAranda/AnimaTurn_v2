@@ -5,13 +5,18 @@ let currentAttack = null
 let pendingCounterattack = null
 let pendingCritical = null
 let pendingFallen = null
+let lastAttackResult = null
 let reconnectTimer = null
 let personajes = []
 let activeTab = "preparacion"
 let characterModal = { mode: "add", id: null, tipo: "jugador" }
+let gmMode = false
+let estadoTargetId = null
+let estadoColor = "azul"
 
 const $ = (id) => document.getElementById(id)
 const TIPOS_JUGADOR = ["jugador", "aliado"]
+const ESTADO_COLORES = ["rojo", "verde", "amarillo", "azul", "naranja", "morado"]
 
 window.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".tab-button").forEach(button => {
@@ -21,10 +26,32 @@ window.addEventListener("DOMContentLoaded", () => {
         input.addEventListener("change", updateCharModalVisibility)
     })
     $("attack-target")?.addEventListener("change", updateAttackForm)
+    initGmMode()
     renderEmptyState()
     actualizarEstadoRonda("Pendiente de generar")
     connectWebSocket()
 })
+
+/* ----------------------------- Modo GM ----------------------------- */
+
+function initGmMode() {
+    gmMode = localStorage.getItem("animaturn-gm") === "1"
+    const toggle = $("gm-toggle")
+    if (toggle) {
+        toggle.checked = gmMode
+        toggle.addEventListener("change", () => {
+            gmMode = toggle.checked
+            localStorage.setItem("animaturn-gm", gmMode ? "1" : "0")
+            applyGmMode()
+            if (lastAttackResult) mostrarResultadoAtaque(lastAttackResult)
+        })
+    }
+    applyGmMode()
+}
+
+function applyGmMode() {
+    document.body.classList.toggle("gm-mode", gmMode)
+}
 
 function connectWebSocket() {
     ws = new WebSocket((location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/ws")
@@ -153,6 +180,7 @@ function applyPersonajes(data) {
     personajes = Array.isArray(data) ? data : []
     renderPersonajesList()
     renderTabs()
+    if (estadoTargetId !== null && !$("estado-modal").classList.contains("hidden")) renderEstadoList()
 }
 
 function renderPersonajesList() {
@@ -261,7 +289,7 @@ function turnCardMarkup(p, index) {
     const detalleTirada = Array.isArray(p.rolls) ? p.rolls.join(" + ") : p.roll
     const esActivo = index === currentTurnIndex
     return `
-    <div class="turn-card ${getBorderClass(p.tipo)}${activoClass}${defensivaClass}">
+    <div class="turn-card ${getBorderClass(p.tipo)}${activoClass}${defensivaClass}" onclick="openEstadoModal(${p.id})" tabindex="0" role="button" aria-label="Gestionar estados de ${escapeHtml(p.nombre)}">
         <div class="turn-header">
             <div class="turn-title-row">
                 <span class="turn-number">${index + 1}</span>
@@ -269,8 +297,8 @@ function turnCardMarkup(p, index) {
             </div>
             <div class="turn-actions">
                 <span class="stat-chip tipo-chip ${getTipoClass(p.tipo)}">${getTipoLabel(p.tipo)}</span>
-                ${esActivo ? '<span class="active-label">Activo</span>' : `<button type="button" class="turn-select-button" onclick="setActiveCharacter(${p.id})">Hacer activo</button>`}
-                ${esActivo ? `<button type="button" class="action-button" onclick="openAttackModal(${p.id})">Acción</button>` : ''}
+                ${esActivo ? '<span class="active-label">Activo</span>' : `<button type="button" class="turn-select-button" onclick="event.stopPropagation(); setActiveCharacter(${p.id})">Hacer activo</button>`}
+                ${esActivo ? `<button type="button" class="action-button" onclick="event.stopPropagation(); openAttackModal(${p.id})">Acción</button>` : ''}
             </div>
         </div>
         <div class="turn-meta">
@@ -304,6 +332,12 @@ function tagsMarkup(p) {
     if (p.debil) tags += `<span class="tag tag-debil">Débil</span>`
     if (p.caido) tags += `<span class="tag tag-caido">Caído</span>`
     if (p.acumulacion) tags += `<span class="tag tag-acumulacion">Acumulación</span>`
+    if (Array.isArray(p.estados)) {
+        tags += p.estados.map(e => {
+            const color = ESTADO_COLORES.includes(e.color) ? e.color : "azul"
+            return `<span class="tag tag-estado estado-${color}">${escapeHtml(e.texto)}</span>`
+        }).join("")
+    }
     return tags ? `<div class="turn-tags">${tags}</div>` : ""
 }
 
@@ -448,6 +482,7 @@ function openAttackModal(attackerId, counter = false) {
     $("attack-title").textContent = counter ? `Contraataque de ${attacker.nombre}` : `Atacar con ${attacker.nombre}`
     $("attack-target").innerHTML = targets.map(t => `<option value="${t.id}">${escapeHtml(t.nombre)}</option>`).join("")
     $("attack-number").value = ""
+    $("attack-reduccion").value = "0"
     updateAttackForm()
     showModal("attack-modal")
 }
@@ -469,8 +504,8 @@ function updateAttackForm() {
     $("attack-defense-field").classList.toggle("hidden", true)
 
     $("attack-formula-hint").textContent = targetJugador
-        ? "Ataque − Defensa limpia del objetivo = porcentaje final (se aplica su TA)."
-        : "Ataque − Defensa guardada del objetivo = porcentaje final (se aplica su TA)."
+        ? "Ataque − Defensa limpia del objetivo = porcentaje final (se aplica su TA, mínimo 1)."
+        : "Ataque − Defensa guardada del objetivo = porcentaje final (se aplica su TA, mínimo 1)."
 
     updateSurpriseWarning()
 }
@@ -511,6 +546,7 @@ function performAttack() {
         attacker_id: currentAttack.attackerId,
         target_id: targetId,
         numero,
+        reduccion_armadura: Number($("attack-reduccion").value) || 0,
     }
     if (target && TIPOS_JUGADOR.includes(target.tipo)) {
         const defensaNumero = Number($("attack-defensa-numero").value)
@@ -525,23 +561,33 @@ function performAttack() {
 }
 
 function mostrarResultadoAtaque(data) {
+    lastAttackResult = data
     pendingCounterattack = data.estado === "contraataque" ? data : null
     let html = `<div class="attack-summary"><p><strong>${escapeHtml(data.atacante)}</strong> → <strong>${escapeHtml(data.objetivo)}</strong></p>`
     if (data.sorpresa?.agresor_sorprende) html += `<div class="surprise-warning">⚠ Sorpresa conseguida sobre el objetivo.</div>`
     if (data.sorpresa?.objetivo_sorprende) html += `<div class="surprise-warning">⚠ El objetivo tiene sorpresa sobre el atacante.</div>`
-    html += `<div class="result-message ${data.estado}">${escapeHtml(data.mensaje)}</div>`
-    html += `<dl class="result-details"><div><dt>Ataque</dt><dd>${escapeHtml(data.ataque_detalle)}</dd></div><div><dt>Defensa</dt><dd>− ${escapeHtml(data.defensa_detalle)}</dd></div><div><dt>Porcentaje</dt><dd>${data.porcentaje}%</dd></div>`
-    if (data.estado === "golpe") {
-        html += `<div><dt>TA</dt><dd>− ${data.ta * 10}%</dd></div><div><dt>Daño</dt><dd>${fmt(data.dano_total)}</dd></div><div><dt>Vida restante</dt><dd>${fmt(data.vida_actual)}</dd></div>`
+
+    if (gmMode) {
+        html += `<div class="result-message ${data.estado}">${escapeHtml(data.mensaje)}</div>`
+        html += `<dl class="result-details"><div><dt>Ataque</dt><dd>${escapeHtml(data.ataque_detalle)}</dd></div><div><dt>Defensa</dt><dd>− ${escapeHtml(data.defensa_detalle)}</dd></div><div><dt>Porcentaje</dt><dd>${data.porcentaje}%</dd></div>`
+        if (data.estado === "golpe") {
+            html += `<div><dt>Reducción de armadura</dt><dd>${data.reduccion_armadura ?? 0}</dd></div><div><dt>TA efectiva</dt><dd>− ${(data.ta_efectiva ?? data.ta) * 10}%</dd></div><div><dt>Daño</dt><dd>${fmt(data.dano_total)}</dd></div><div><dt>Vida restante</dt><dd>${fmt(data.vida_actual)}</dd></div>`
+        } else {
+            html += `<div><dt>Fallo</dt><dd>${data.fallo}%</dd></div>`
+        }
+        html += `</dl></div>`
     } else {
-        html += `<div><dt>Fallo</dt><dd>${data.fallo}%</dd></div>`
+        html += `<div class="result-message ${data.estado}">${escapeHtml(resultadoVeredicto(data))}</div>`
+        if (data.estado === "golpe") {
+            html += `<div class="result-publico">Daño causado: <strong>${fmt(data.dano_total)}</strong></div>`
+        }
     }
-    html += `</dl></div>`
+
     $("attack-result").innerHTML = html
     $("counterattack-area").classList.toggle("hidden", data.estado !== "contraataque")
     showModal("result-modal")
 
-    if (data.estado === "golpe" && data.critico) {
+    if (data.estado === "golpe" && data.critico && !data.caido) {
         pendingCritical = { id: data.objetivo_id, nombre: data.objetivo, dano: data.dano_total }
         pendingFallen = data.caido ? { id: data.objetivo_id, nombre: data.objetivo } : null
         showCriticalModal()
@@ -549,6 +595,12 @@ function mostrarResultadoAtaque(data) {
         pendingFallen = { id: data.objetivo_id, nombre: data.objetivo }
         showFallenModal()
     }
+}
+
+function resultadoVeredicto(data) {
+    if (data.estado === "golpe") return "Impacto confirmado."
+    if (data.estado === "contraataque") return "Contraataque posible."
+    return "El ataque ha fallado."
 }
 
 function openCounterattack() {
@@ -602,6 +654,69 @@ function retirarCaido() {
 function closeFallenModal() {
     hideModal("fallen-modal")
     pendingFallen = null
+}
+
+/* ----------------------------- Estados / Tags ----------------------------- */
+
+function openEstadoModal(id) {
+    const p = findTurn(id) || personajes.find(x => x.id === Number(id))
+    if (!p) return
+    estadoTargetId = Number(id)
+    $("estado-title").textContent = `Estados de ${p.nombre}`
+    $("estado-texto").value = ""
+    selectEstadoColor("azul")
+    renderEstadoList()
+    showModal("estado-modal")
+    $("estado-texto").focus()
+}
+
+function renderEstadoList() {
+    const p = personajes.find(x => x.id === estadoTargetId)
+    const estados = (p && Array.isArray(p.estados)) ? p.estados : []
+    if (!estados.length) {
+        $("estado-list").innerHTML = `<p class="estado-empty">Sin estados todavía. Añade uno abajo.</p>`
+        return
+    }
+    $("estado-list").innerHTML = estados.map((e, i) => {
+        const color = ESTADO_COLORES.includes(e.color) ? e.color : "azul"
+        return `<span class="tag tag-estado estado-${color}">${escapeHtml(e.texto)}<button type="button" class="estado-remove" onclick="removeEstado(${i})" aria-label="Quitar estado">×</button></span>`
+    }).join("")
+}
+
+function selectEstadoColor(color) {
+    if (!ESTADO_COLORES.includes(color)) return
+    estadoColor = color
+    document.querySelectorAll(".swatch").forEach(el => {
+        el.classList.toggle("selected", el.dataset.color === color)
+    })
+}
+
+function addEstado() {
+    if (estadoTargetId === null) return
+    const texto = $("estado-texto").value.trim()
+    if (!texto) {
+        showToast("Escribe el texto del estado.", true)
+        return
+    }
+    const p = personajes.find(x => x.id === estadoTargetId)
+    const estados = (p && Array.isArray(p.estados)) ? p.estados.slice() : []
+    estados.push({ texto: texto.slice(0, 24), color: estadoColor })
+    send({ type: "set_estados", id: estadoTargetId, estados })
+    $("estado-texto").value = ""
+    $("estado-texto").focus()
+}
+
+function removeEstado(index) {
+    if (estadoTargetId === null) return
+    const p = personajes.find(x => x.id === estadoTargetId)
+    const estados = (p && Array.isArray(p.estados)) ? p.estados.slice() : []
+    estados.splice(index, 1)
+    send({ type: "set_estados", id: estadoTargetId, estados })
+}
+
+function closeEstadoModal() {
+    hideModal("estado-modal")
+    estadoTargetId = null
 }
 
 /* ----------------------------- Utilidades ----------------------------- */

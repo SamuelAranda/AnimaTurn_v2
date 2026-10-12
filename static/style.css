@@ -66,6 +66,68 @@ input {
     color: #f9f1e7;
 }
 
+.masthead-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.gm-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #f9f1e7;
+}
+
+.gm-switch input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.gm-switch-track {
+    position: relative;
+    width: 46px;
+    height: 26px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.22);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.35);
+    transition: background 160ms ease;
+}
+
+.gm-switch-track::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fdf6ea;
+    transition: transform 160ms ease;
+}
+
+.gm-switch input:checked + .gm-switch-track {
+    background: linear-gradient(135deg, #c49a4b, #9b6f28);
+}
+
+.gm-switch input:checked + .gm-switch-track::after {
+    transform: translateX(20px);
+}
+
+.gm-switch input:focus-visible + .gm-switch-track {
+    outline: 2px solid #e7c98f;
+    outline-offset: 2px;
+}
+
 .eyebrow,
 .section-kicker {
     margin: 0;
@@ -1099,3 +1161,167 @@ button:disabled {
     .tab-button.tab-jugador { flex: 0 0 auto; }
     .player-stats { gap: 6px; }
 }
+
+/* Resultado público (sin Modo GM) */
+.result-publico {
+    margin: 16px 0 0;
+    padding: 14px 16px;
+    border-radius: var(--radius-md);
+    background: rgba(83, 56, 41, 0.07);
+    font-size: 1.05rem;
+}
+
+/* Estados / Tags personalizados */
+.estado-card { width: min(480px, 100%); }
+
+.estado-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 34px;
+    margin-bottom: 18px;
+}
+
+.estado-empty { margin: 0; color: var(--text-soft); font-size: 0.9rem; }
+
+.tag-estado {
+    gap: 6px;
+    border: 1px solid transparent;
+}
+
+.estado-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.18);
+    color: inherit;
+    font-size: 0.85rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.estado-remove:hover { background: rgba(0, 0, 0, 0.32); transform: none; }
+
+.color-swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.swatch {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 2px solid rgba(94, 68, 50, 0.25);
+    border-radius: 50%;
+    box-shadow: none;
+}
+
+.swatch.selected {
+    border-color: var(--text-main);
+    box-shadow: 0 0 0 3px rgba(186, 138, 60, 0.35);
+}
+
+.swatch:hover { transform: translateY(-1px); }
+
+.color-rojo { background: #c1453a; }
+.color-verde { background: #2f9d5b; }
+.color-amarillo { background: #d8b23c; }
+.color-azul { background: #3e78b2; }
+.color-naranja { background: #e08a2e; }
+.color-morado { background: #8a5cc0; }
+
+.tag-estado.estado-rojo { background: rgba(193, 69, 58, 0.18); color: #9c2a21; border-color: rgba(193, 69, 58, 0.5); }
+.tag-estado.estado-verde { background: rgba(47, 157, 91, 0.16); color: #1f7a43; border-color: rgba(47, 157, 91, 0.45); }
+.tag-estado.estado-amarillo { background: rgba(216, 178, 60, 0.2); color: #8a6404; border-color: rgba(216, 178, 60, 0.5); }
+.tag-estado.estado-azul { background: rgba(62, 120, 178, 0.16); color: #235c86; border-color: rgba(62, 120, 178, 0.45); }
+.tag-estado.estado-naranja { background: rgba(224, 138, 46, 0.18); color: #a85c12; border-color: rgba(224, 138, 46, 0.5); }
+.tag-estado.estado-morado { background: rgba(138, 92, 192, 0.18); color: #6a3ea0; border-color: rgba(138, 92, 192, 0.5); }
+
+/* Modo GM: tema oscuro */
+body.gm-mode {
+    --bg-panel: rgba(32, 25, 20, 0.94);
+    --bg-card: rgba(40, 32, 26, 0.96);
+    --bg-card-strong: rgba(255, 255, 255, 0.06);
+    --text-main: #f0e6d8;
+    --text-soft: #c4b29c;
+    --line-soft: rgba(255, 237, 214, 0.16);
+    --line-strong: rgba(255, 237, 214, 0.3);
+    --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.5);
+    --shadow-md: 0 14px 30px rgba(0, 0, 0, 0.4);
+    background:
+        radial-gradient(circle at top left, rgba(186, 138, 60, 0.16), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(139, 58, 50, 0.18), transparent 32%),
+        linear-gradient(180deg, #120e0b 0%, #241a13 100%);
+    color: var(--text-main);
+}
+
+body.gm-mode .info-box,
+body.gm-mode .turn-card {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)), var(--bg-card);
+    border-color: rgba(255, 237, 214, 0.12);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+}
+
+body.gm-mode input[type="text"],
+body.gm-mode input[type="number"],
+body.gm-mode .field select {
+    background: rgba(255, 255, 255, 0.07);
+    color: var(--text-main);
+    border-color: var(--line-soft);
+    box-shadow: none;
+}
+
+body.gm-mode .modal-card {
+    background: #241a13;
+    border-color: rgba(255, 237, 214, 0.16);
+    color: var(--text-main);
+}
+
+body.gm-mode .close-button,
+body.gm-mode .ghost-button {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-main);
+    border-color: var(--line-strong);
+}
+
+body.gm-mode .bando-selector,
+body.gm-mode .selector-pill,
+body.gm-mode .result-details div,
+body.gm-mode .result-publico {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+body.gm-mode .turn-select-button { color: inherit; }
+
+body.gm-mode .turn-card.defensiva,
+body.gm-mode .personaje-card.defensiva,
+body.gm-mode .player-sheet.defensiva {
+    background: linear-gradient(180deg, rgba(70, 140, 200, 0.3), rgba(70, 140, 200, 0.16)), var(--bg-card);
+    border-color: rgba(70, 140, 200, 0.5);
+}
+
+body.gm-mode .surprise-warning {
+    background: rgba(193, 69, 58, 0.22);
+    color: #f3b8b2;
+}
+
+body.gm-mode .tag {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #f0e6d8;
+}
+
+body.gm-mode .tag-estado { color: #fff; border-color: transparent; }
+body.gm-mode .tag-estado.estado-rojo { background: #a83b32; }
+body.gm-mode .tag-estado.estado-verde { background: #227a45; }
+body.gm-mode .tag-estado.estado-amarillo { background: #a8801f; }
+body.gm-mode .tag-estado.estado-azul { background: #2f5f8f; }
+body.gm-mode .tag-estado.estado-naranja { background: #b76a17; }
+body.gm-mode .tag-estado.estado-morado { background: #6a3ea0; }
+

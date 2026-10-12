@@ -28,22 +28,23 @@ Four tipos: `jugador`, `aliado`, `enemigo`, `pnj` (replaced the old `bando`).
 
 - **`jugador`/`aliado`** (`TIPOS_JUGADOR`): no stored `ataque`/`defensa`. Attack with a clean number; defend with a clean number supplied at resolution time.
 - **`enemigo`/`pnj`** (`TIPOS_ENEMIGO`): store `ataque`/`defensa`; attack = `ataque + numero`, defend with stored `defensa`.
-- Common fields: `velocidad`, `vida_max`, `vida_actual`, `zeon`, `ki`, `estilo`, `ta`, `dano`, `acumulacion`. Required: `vida`, `ta` (and `ataque`, `defensa` for enemigo/pnj).
-- Dynamic state: `a_la_defensiva` (per round), `criticos: []`, plus derived `debil`/`caido`.
+- Common fields: `velocidad`, `vida_max`, `vida_actual`, `zeon`, `ki`, `estilo`, `ta`, `dano`, `acumulacion`. Required: `vida`, `ta` (and `ataque`, `defensa` for enemigo/pnj). `ta` may be `0`; the **effective** TA used in combat is always `max(1, ta − reduccion_armadura)` (`ta_efectiva()`).
+- Dynamic state: `a_la_defensiva` (per round), `criticos: []`, `estados: [{texto, color}]` (custom public tags), plus derived `debil`/`caido`.
 
 ## Invariants (easy to break)
 
 - **Enemigo/PNJ combat stats must never be broadcast.** Public payloads only expose their identity + tags; `jugador`/`aliado` data *is* public (their sheet). Keep `datos_personaje_publicos` / `datos_turno_publicos` (server.py) using `etiquetas_publicas` and gate `datos_ficha` behind `TIPOS_JUGADOR`. Full stats only leave the server through `datos_privados`, in response to `get_character`.
-- The WS protocol is a `type` string switch in `websocket_endpoint`. Client→server: `add`, `roll`, `delete`, `set_active`, `next`, `get_character`, `update_character`, `critical_level`, `attack`, `counterattack`, `clear`. Server→client: `init`, `personajes`, `ronda`, `add`, `delete`, `clear`, `character`, `character_saved`, `attack_result`, `error`. Any new type must be handled on both `server.py` and `static/script.js`. The character modal only closes on `character_saved`, so failed `add`/`update_character` keep it open.
+- The WS protocol is a `type` string switch in `websocket_endpoint`. Client→server: `add`, `roll`, `delete`, `set_active`, `next`, `get_character`, `update_character`, `critical_level`, `set_estados`, `attack`, `counterattack`, `clear`. Server→client: `init`, `personajes`, `ronda`, `add`, `delete`, `clear`, `character`, `character_saved`, `attack_result`, `error`. Any new type must be handled on both `server.py` and `static/script.js`. The character modal only closes on `character_saved`, so failed `add`/`update_character` keep it open.
 - Editing `server.py` auto-reloads (uvicorn `reload=True`); `static/*` changes only need a browser refresh.
 - `cargar_estado` migrates old saves (`bando`→`tipo`, `vida`→`vida_max`/`vida_actual`, `parada`/`esquiva`→`defensa`). Keep the migration working when you add fields.
 
 ## Domain rules
 
-- `roll` generates **25 rounds** at once; `next` advances the active marker and rolls over to the next round, clearing everyone's `a_la_defensiva`.
+- `roll` generates **25 rounds** at once; `next` advances the active marker and rolls over to the next round, clearing everyone's `a_la_defensiva`. On entering a new round it **re-reads current `velocidad`/`estilo` and re-rolls that round** (`regenerar_ronda`); later rounds are re-rolled when entered.
 - Initiative: `velocidad + d100`, open-ended rolls from 90+, and rolls 1/2/3 map to -125/-100/-75.
-- Attack: `porcentaje = ataque_final - defensa`; positive is an impact (even for 0 damage), `<= 0` fails, `<= -10` offers a counterattack. On impact: `postTA = max(0, porcentaje - objetivo.ta*10)`; `dano = atacante.dano * postTA / 100`, subtracted from `vida_actual`.
-- Impact sets `a_la_defensiva` unless the target has `acumulacion`. **Critical** when `dano >= 50%` of the pre-hit `vida_actual` (client prompts for the level via `critical_level`). **Débil** below 30% of `vida_max`; **Caído** at `vida_actual <= 0`.
+- Attack: `porcentaje = ataque_final - defensa`; positive is an impact (even for 0 damage), `<= 0` fails, `<= -10` offers a counterattack. On impact: `ta_efectiva = max(1, ta - reduccion_armadura)` (from the attack's "Reducción de armadura" input), `postTA = max(0, porcentaje - ta_efectiva*10)`; `dano = atacante.dano * postTA / 100`, subtracted from `vida_actual`. Result exposes `reduccion_armadura` and `ta_efectiva`.
+- Impact sets `a_la_defensiva` unless the target has `acumulacion`. **Caído** is evaluated *before* **Critical**: if `vida_actual <= 0` the target is caído and critical is never offered (`critico = not caido and dano >= 50%` of pre-hit `vida_actual`). Client prompts for the critical level via `critical_level`. **Débil** below 30% of `vida_max`.
+- **Modo GM** is a per-browser toggle (localStorage `animaturn-gm`, `body.gm-mode`): dark theme, and the attack-result screen shows full attributes/calculations. Without it the result shows only the verdict + damage dealt. Server always sends the full `attack_result`; the client gates the display.
 - A character added mid-session is appended only to **rounds after the current one** (`rondas[ronda_actual + 1:]`), so it has no turn this round.
 
 ## Ignore
