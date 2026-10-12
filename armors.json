@@ -467,231 +467,436 @@
         "Frio": 0,
         "Energia": 12
     },
-    {
-        "Acolchada reforzada": {
-            "Filo": 2,
-            "Contundente": 2,
-            "Penetrante": 1,
-            "Calor": 1,
-            "Electricidad": 1,
-            "Frio": 2,
-            "Energia": 2
-        },
-        "Cota de cuero tachonada": {
-            "Filo": 2,
-            "Contundente": 1,
-            "Penetrante": 1,
-            "Calor": 2,
-            "Electricidad": 1,
-            "Frio": 2,
-            "Energia": 1
-        },
-        "Gabardina reforzada": {
-            "Filo": 2,
-            "Contundente": 2,
-            "Penetrante": 1,
-            "Calor": 2,
-            "Electricidad": 1,
-            "Frio": 2,
-            "Energia": 2
-        },
-        "Piel gruesa": {
-            "Filo": 3,
-            "Contundente": 3,
-            "Penetrante": 2,
-            "Calor": 2,
-            "Electricidad": 1,
-            "Frio": 2,
-            "Energia": 2
-        },
-        "Cuero hervido": {
-            "Filo": 3,
-            "Contundente": 2,
-            "Penetrante": 2,
-            "Calor": 2,
-            "Electricidad": 2,
-            "Frio": 2,
-            "Energia": 2
-        },
-        "Mallas reforzadas": {
-            "Filo": 5,
-            "Contundente": 3,
-            "Penetrante": 3,
-            "Calor": 1,
-            "Electricidad": 2,
-            "Frio": 0,
-            "Energia": 1
-        },
-        "Peto con refuerzo": {
-            "Filo": 5,
-            "Contundente": 6,
-            "Penetrante": 6,
-            "Calor": 4,
-            "Electricidad": 1,
-            "Frio": 0,
-            "Energia": 1
-        },
-        "Piezas ligeras": {
-            "Filo": 3,
-            "Contundente": 2,
-            "Penetrante": 2,
-            "Calor": 2,
-            "Electricidad": 3,
-            "Frio": 2,
-            "Energia": 2
-        },
-        "Anillas reforzadas": {
-            "Filo": 5,
-            "Contundente": 4,
-            "Penetrante": 4,
-            "Calor": 1,
-            "Electricidad": 2,
-            "Frio": 0,
-            "Energia": 1
-        },
-        "Semicompleta reforzada": {
-            "Filo": 5,
-            "Contundente": 5,
-            "Penetrante": 5,
-            "Calor": 4,
-            "Electricidad": 2,
-            "Frio": 0,
-            "Energia": 1
-        },
-        "Escamas ligeras": {
-            "Filo": 5,
-            "Contundente": 5,
-            "Penetrante": 5,
-            "Calor": 4,
-            "Electricidad": 3,
-            "Frio": 0,
-            "Energia": 3
-        },
-        "Placas ligeras": {
-            "Filo": 6,
-            "Contundente": 5,
-            "Penetrante": 5,
-            "Calor": 5,
-            "Electricidad": 3,
-            "Frio": 0,
-            "Energia": 3
-        },
-        "Completa ligera": {
-            "Filo": 6,
-            "Contundente": 6,
-            "Penetrante": 6,
-            "Calor": 5,
-            "Electricidad": 4,
-            "Frio": 0,
-            "Energia": 4
-        },
-        "Completa pesada reforzada": {
-            "Filo": 7,
-            "Contundente": 7,
-            "Penetrante": 7,
-            "Calor": 6,
-            "Electricidad": 4,
-            "Frio": 0,
-            "Energia": 4
-        },
-        "De campaña ligera": {
-            "Filo": 6,
-            "Contundente": 6,
-            "Penetrante": 6,
-            "Calor": 6,
-            "Electricidad": 4,
-            "Frio": 0,
-            "Energia": 4
-        },
-        "De campaña reforzada": {
-            "Filo": 8,
-            "Contundente": 8,
-            "Penetrante": 8,
-            "Calor": 7,
-            "Electricidad": 4,
-            "Frio": 0,
-            "Energia": 4
-        },
-        "Capucha reforzada": {
-            "Filo": 2,
-            "Contundente": 1,
-            "Penetrante": 3,
-            "Calor": 1,
-            "Electricidad": 3,
-            "Frio": 1,
-            "Energia": 0
-        },
-        "Coronilla reforzada": {
-            "Filo": 5,
-            "Contundente": 5,
-            "Penetrante": 4,
-            "Calor": 2,
-            "Electricidad": 0,
-            "Frio": 3,
-            "Energia": 0
-        },
-        "Capucha de mallas reforzada": {
-            "Filo": 5,
-            "Contundente": 3,
-            "Penetrante": 2,
-            "Calor": 2,
-            "Electricidad": 0,
-            "Frio": 1,
-            "Energia": 0
-        },
-        "Completo abierto reforzado": {
-            "Filo": 6,
-            "Contundente": 5,
-            "Penetrante": 6,
-            "Calor": 3,
-            "Electricidad": 0,
-            "Frio": 3,
-            "Energia": 1
-        },
-        "Completo cerrado reforzado": {
-            "Filo": 6,
-            "Contundente": 6,
-            "Penetrante": 6,
-            "Calor": 4,
-            "Electricidad": 0,
-            "Frio": 3,
-            "Energia": 0
-        },
-        "Natural escamas 10": {
-            "Filo": 10,
-            "Contundente": 10,
-            "Penetrante": 10,
-            "Calor": 10,
-            "Electricidad": 10,
-            "Frio": 10,
-            "Energia": 9
-        },
-        "Caparazón de metal reforzado": {
-            "Filo": 9,
-            "Contundente": 9,
-            "Penetrante": 8,
-            "Calor": 7,
-            "Electricidad": 6,
-            "Frio": 6,
-            "Energia": 0
-        },
-        "Armadura quitinosa reforzada": {
-            "Filo": 5,
-            "Contundente": 5,
-            "Penetrante": 5,
-            "Calor": 5,
-            "Electricidad": 5,
-            "Frio": 5,
-            "Energia": 0
-        },
-        "Cuerpo de piedra pulida": {
-            "Filo": 10,
-            "Contundente": 10,
-            "Penetrante": 10,
-            "Calor": 10,
-            "Electricidad": 10,
-            "Frio": 10,
-            "Energia": 7
-        }
+    "Acolchada reforzada": {
+        "Filo": 2,
+        "Contundente": 2,
+        "Penetrante": 1,
+        "Calor": 1,
+        "Electricidad": 1,
+        "Frio": 2,
+        "Energia": 2
+    },
+    "Cota de cuero tachonada": {
+        "Filo": 2,
+        "Contundente": 1,
+        "Penetrante": 1,
+        "Calor": 2,
+        "Electricidad": 1,
+        "Frio": 2,
+        "Energia": 1
+    },
+    "Gabardina reforzada": {
+        "Filo": 2,
+        "Contundente": 2,
+        "Penetrante": 1,
+        "Calor": 2,
+        "Electricidad": 1,
+        "Frio": 2,
+        "Energia": 2
+    },
+    "Piel gruesa": {
+        "Filo": 3,
+        "Contundente": 3,
+        "Penetrante": 2,
+        "Calor": 2,
+        "Electricidad": 1,
+        "Frio": 2,
+        "Energia": 2
+    },
+    "Cuero hervido": {
+        "Filo": 3,
+        "Contundente": 2,
+        "Penetrante": 2,
+        "Calor": 2,
+        "Electricidad": 2,
+        "Frio": 2,
+        "Energia": 2
+    },
+    "Mallas reforzadas": {
+        "Filo": 5,
+        "Contundente": 3,
+        "Penetrante": 3,
+        "Calor": 1,
+        "Electricidad": 2,
+        "Frio": 0,
+        "Energia": 1
+    },
+    "Peto con refuerzo": {
+        "Filo": 5,
+        "Contundente": 6,
+        "Penetrante": 6,
+        "Calor": 4,
+        "Electricidad": 1,
+        "Frio": 0,
+        "Energia": 1
+    },
+    "Piezas ligeras": {
+        "Filo": 3,
+        "Contundente": 2,
+        "Penetrante": 2,
+        "Calor": 2,
+        "Electricidad": 3,
+        "Frio": 2,
+        "Energia": 2
+    },
+    "Anillas reforzadas": {
+        "Filo": 5,
+        "Contundente": 4,
+        "Penetrante": 4,
+        "Calor": 1,
+        "Electricidad": 2,
+        "Frio": 0,
+        "Energia": 1
+    },
+    "Semicompleta reforzada": {
+        "Filo": 5,
+        "Contundente": 5,
+        "Penetrante": 5,
+        "Calor": 4,
+        "Electricidad": 2,
+        "Frio": 0,
+        "Energia": 1
+    },
+    "Escamas ligeras": {
+        "Filo": 5,
+        "Contundente": 5,
+        "Penetrante": 5,
+        "Calor": 4,
+        "Electricidad": 3,
+        "Frio": 0,
+        "Energia": 3
+    },
+    "Placas ligeras": {
+        "Filo": 6,
+        "Contundente": 5,
+        "Penetrante": 5,
+        "Calor": 5,
+        "Electricidad": 3,
+        "Frio": 0,
+        "Energia": 3
+    },
+    "Completa ligera": {
+        "Filo": 6,
+        "Contundente": 6,
+        "Penetrante": 6,
+        "Calor": 5,
+        "Electricidad": 4,
+        "Frio": 0,
+        "Energia": 4
+    },
+    "Completa pesada reforzada": {
+        "Filo": 7,
+        "Contundente": 7,
+        "Penetrante": 7,
+        "Calor": 6,
+        "Electricidad": 4,
+        "Frio": 0,
+        "Energia": 4
+    },
+    "De campaña ligera": {
+        "Filo": 6,
+        "Contundente": 6,
+        "Penetrante": 6,
+        "Calor": 6,
+        "Electricidad": 4,
+        "Frio": 0,
+        "Energia": 4
+    },
+    "De campaña reforzada": {
+        "Filo": 8,
+        "Contundente": 8,
+        "Penetrante": 8,
+        "Calor": 7,
+        "Electricidad": 4,
+        "Frio": 0,
+        "Energia": 4
+    },
+    "Capucha reforzada": {
+        "Filo": 2,
+        "Contundente": 1,
+        "Penetrante": 3,
+        "Calor": 1,
+        "Electricidad": 3,
+        "Frio": 1,
+        "Energia": 0
+    },
+    "Coronilla reforzada": {
+        "Filo": 5,
+        "Contundente": 5,
+        "Penetrante": 4,
+        "Calor": 2,
+        "Electricidad": 0,
+        "Frio": 3,
+        "Energia": 0
+    },
+    "Capucha de mallas reforzada": {
+        "Filo": 5,
+        "Contundente": 3,
+        "Penetrante": 2,
+        "Calor": 2,
+        "Electricidad": 0,
+        "Frio": 1,
+        "Energia": 0
+    },
+    "Completo abierto reforzado": {
+        "Filo": 6,
+        "Contundente": 5,
+        "Penetrante": 6,
+        "Calor": 3,
+        "Electricidad": 0,
+        "Frio": 3,
+        "Energia": 1
+    },
+    "Completo cerrado reforzado": {
+        "Filo": 6,
+        "Contundente": 6,
+        "Penetrante": 6,
+        "Calor": 4,
+        "Electricidad": 0,
+        "Frio": 3,
+        "Energia": 0
+    },
+    "Natural escamas 10": {
+        "Filo": 10,
+        "Contundente": 10,
+        "Penetrante": 10,
+        "Calor": 10,
+        "Electricidad": 10,
+        "Frio": 10,
+        "Energia": 9
+    },
+    "Caparazón de metal reforzado": {
+        "Filo": 9,
+        "Contundente": 9,
+        "Penetrante": 8,
+        "Calor": 7,
+        "Electricidad": 6,
+        "Frio": 6,
+        "Energia": 0
+    },
+    "Armadura quitinosa reforzada": {
+        "Filo": 5,
+        "Contundente": 5,
+        "Penetrante": 5,
+        "Calor": 5,
+        "Electricidad": 5,
+        "Frio": 5,
+        "Energia": 0
+    },
+    "Cuerpo de piedra pulida": {
+        "Filo": 10,
+        "Contundente": 10,
+        "Penetrante": 10,
+        "Calor": 10,
+        "Electricidad": 10,
+        "Frio": 10,
+        "Energia": 7
+    },
+    "Quitina 2": {
+        "Filo": 2,
+        "Contundente": 2,
+        "Penetrante": 2,
+        "Calor": 2,
+        "Electricidad": 2,
+        "Frio": 2,
+        "Energia": 0
+    },
+    "Quitina 8": {
+        "Filo": 8,
+        "Contundente": 8,
+        "Penetrante": 8,
+        "Calor": 8,
+        "Electricidad": 8,
+        "Frio": 8,
+        "Energia": 0
+    },
+    "Quitina 13": {
+        "Filo": 13,
+        "Contundente": 13,
+        "Penetrante": 13,
+        "Calor": 13,
+        "Electricidad": 13,
+        "Frio": 13,
+        "Energia": 0
+    },
+    "Huesos 5": {
+        "Filo": 5,
+        "Contundente": 4,
+        "Penetrante": 5,
+        "Calor": 4,
+        "Electricidad": 5,
+        "Frio": 5,
+        "Energia": 0
+    },
+    "Madera 2": {
+        "Filo": 2,
+        "Contundente": 2,
+        "Penetrante": 2,
+        "Calor": 2,
+        "Electricidad": 2,
+        "Frio": 2,
+        "Energia": 0
+    },
+    "Roca 10": {
+        "Filo": 10,
+        "Contundente": 10,
+        "Penetrante": 10,
+        "Calor": 9,
+        "Electricidad": 6,
+        "Frio": 6,
+        "Energia": 3
+    },
+    "Cuerpo de diamante": {
+        "Filo": 12,
+        "Contundente": 12,
+        "Penetrante": 10,
+        "Calor": 10,
+        "Electricidad": 8,
+        "Frio": 8,
+        "Energia": 8
+    },
+    "Cuerpo de metal": {
+        "Filo": 5,
+        "Contundente": 5,
+        "Penetrante": 5,
+        "Calor": 4,
+        "Electricidad": 2,
+        "Frio": 0,
+        "Energia": 0
+    },
+    "Metal 6": {
+        "Filo": 6,
+        "Contundente": 6,
+        "Penetrante": 6,
+        "Calor": 5,
+        "Electricidad": 2,
+        "Frio": 0,
+        "Energia": 0
+    },
+    "Metal 7": {
+        "Filo": 7,
+        "Contundente": 7,
+        "Penetrante": 7,
+        "Calor": 6,
+        "Electricidad": 2,
+        "Frio": 0,
+        "Energia": 0
+    },
+    "Metal Estelar 6": {
+        "Filo": 6,
+        "Contundente": 6,
+        "Penetrante": 6,
+        "Calor": 6,
+        "Electricidad": 3,
+        "Frio": 1,
+        "Energia": 6
+    },
+    "Natural + Reforzada 6": {
+        "Filo": 6,
+        "Contundente": 6,
+        "Penetrante": 6,
+        "Calor": 6,
+        "Electricidad": 5,
+        "Frio": 5,
+        "Energia": 0
+    },
+    "Natural escamas 4": {
+        "Filo": 4,
+        "Contundente": 4,
+        "Penetrante": 4,
+        "Calor": 4,
+        "Electricidad": 4,
+        "Frio": 4,
+        "Energia": 3
+    },
+    "Natural escamas 8": {
+        "Filo": 8,
+        "Contundente": 8,
+        "Penetrante": 8,
+        "Calor": 8,
+        "Electricidad": 8,
+        "Frio": 8,
+        "Energia": 7
+    },
+    "Escamas de Cristal 12": {
+        "Filo": 12,
+        "Contundente": 12,
+        "Penetrante": 12,
+        "Calor": 12,
+        "Electricidad": 12,
+        "Frio": 12,
+        "Energia": 12
+    },
+    "Escamas negras 12": {
+        "Filo": 12,
+        "Contundente": 12,
+        "Penetrante": 12,
+        "Calor": 12,
+        "Electricidad": 12,
+        "Frio": 12,
+        "Energia": 12
+    },
+    "Demoníaca 2": {
+        "Filo": 2,
+        "Contundente": 2,
+        "Penetrante": 2,
+        "Calor": 5,
+        "Electricidad": 2,
+        "Frio": 2,
+        "Energia": 5
+    },
+    "Infernal 6": {
+        "Filo": 6,
+        "Contundente": 6,
+        "Penetrante": 6,
+        "Calor": 7,
+        "Electricidad": 4,
+        "Frio": 4,
+        "Energia": 6
+    },
+    "Fase 8": {
+        "Filo": 8,
+        "Contundente": 8,
+        "Penetrante": 8,
+        "Calor": 8,
+        "Electricidad": 8,
+        "Frio": 8,
+        "Energia": 8
+    },
+    "Sombras 4": {
+        "Filo": 4,
+        "Contundente": 4,
+        "Penetrante": 4,
+        "Calor": 4,
+        "Electricidad": 4,
+        "Frio": 4,
+        "Energia": 6
+    },
+    "Necrod 3": {
+        "Filo": 3,
+        "Contundente": 3,
+        "Penetrante": 3,
+        "Calor": 3,
+        "Electricidad": 3,
+        "Frio": 3,
+        "Energia": 7
+    },
+    "Absodian 10": {
+        "Filo": 10,
+        "Contundente": 10,
+        "Penetrante": 10,
+        "Calor": 10,
+        "Electricidad": 10,
+        "Frio": 10,
+        "Energia": 10
+    },
+    "Placas sombrías": {
+        "Filo": 5,
+        "Contundente": 5,
+        "Penetrante": 5,
+        "Calor": 5,
+        "Electricidad": 4,
+        "Frio": 2,
+        "Energia": 5
     }
 }

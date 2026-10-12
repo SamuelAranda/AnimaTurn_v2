@@ -11,7 +11,7 @@
             "defense": 20,
             "hp_max": 70,
             "hp_current": 70,
-            "armor": "No",
+            "armor": "",
             "damage": 10,
             "weapon": "No",
             "stats": {
@@ -56,7 +56,7 @@
             "defense": 30,
             "hp_max": 80,
             "hp_current": 80,
-            "armor": "No",
+            "armor": "",
             "damage": 30,
             "weapon": "Arco",
             "stats": {
@@ -105,7 +105,7 @@
             "defense": 10,
             "hp_max": 70,
             "hp_current": 70,
-            "armor": "No",
+            "armor": "",
             "damage": 10,
             "weapon": "No",
             "stats": {
@@ -201,7 +201,7 @@
             "defense": 20,
             "hp_max": 80,
             "hp_current": 80,
-            "armor": "No",
+            "armor": "",
             "damage": 30,
             "weapon": "Daga",
             "stats": {
@@ -249,7 +249,7 @@
             "defense": 10,
             "hp_max": 80,
             "hp_current": 80,
-            "armor": "No",
+            "armor": "",
             "damage": 10,
             "weapon": "Manos",
             "stats": {
@@ -343,7 +343,7 @@
             "defense": 50,
             "hp_max": 100,
             "hp_current": 100,
-            "armor": "No",
+            "armor": "",
             "damage": 25,
             "weapon": "Estilete",
             "stats": {
@@ -391,7 +391,7 @@
             "defense": 10,
             "hp_max": 70,
             "hp_current": 70,
-            "armor": "No",
+            "armor": "",
             "damage": 10,
             "weapon": "No",
             "stats": {
@@ -483,7 +483,7 @@
             "defense": 100,
             "hp_max": 70,
             "hp_current": 70,
-            "armor": "No",
+            "armor": "",
             "damage": 45,
             "weapon": "Estoque",
             "stats": {
@@ -534,7 +534,7 @@
             "defense": 60,
             "hp_max": 80,
             "hp_current": 80,
-            "armor": "No",
+            "armor": "",
             "damage": 30,
             "weapon": "Garrote",
             "stats": {
@@ -578,7 +578,7 @@
             "defense": 70,
             "hp_max": 105,
             "hp_current": 105,
-            "armor": "No",
+            "armor": "",
             "damage": 40,
             "weapon": "Espada corta",
             "stats": {
@@ -623,7 +623,7 @@
             "defense": 110,
             "hp_max": 115,
             "hp_current": 115,
-            "armor": "No",
+            "armor": "",
             "damage": 30,
             "weapon": "Daga",
             "stats": {
@@ -671,7 +671,7 @@
             "defense": 60,
             "hp_max": 105,
             "hp_current": 105,
-            "armor": "No",
+            "armor": "",
             "damage": 30,
             "weapon": "Daga",
             "stats": {
@@ -717,7 +717,7 @@
             "defense": 130,
             "hp_max": 125,
             "hp_current": 125,
-            "armor": "No",
+            "armor": "",
             "damage": 40,
             "weapon": "Espada corta",
             "stats": {
@@ -765,7 +765,7 @@
             "defense": 100,
             "hp_max": 115,
             "hp_current": 115,
-            "armor": "No",
+            "armor": "",
             "damage": 40,
             "weapon": "Tanto",
             "stats": {
@@ -811,7 +811,7 @@
             "defense": 140,
             "hp_max": 125,
             "hp_current": 125,
-            "armor": "No",
+            "armor": "",
             "damage": 40,
             "weapon": "Tanto",
             "stats": {
@@ -857,7 +857,7 @@
             "defense": 200,
             "hp_max": 150,
             "hp_current": 150,
-            "armor": "No",
+            "armor": "",
             "damage": 55,
             "weapon": "Tanto",
             "stats": {
@@ -905,7 +905,7 @@
             "defense": 60,
             "hp_max": 75,
             "hp_current": 75,
-            "armor": "No",
+            "armor": "",
             "damage": 30,
             "weapon": "Daga",
             "stats": {
@@ -954,7 +954,7 @@
             "defense": 120,
             "hp_max": 85,
             "hp_current": 85,
-            "armor": "No",
+            "armor": "",
             "damage": 30,
             "weapon": "Daga",
             "stats": {
@@ -1004,7 +1004,7 @@
             "defense": 140,
             "hp_max": 95,
             "hp_current": 95,
-            "armor": "No",
+            "armor": "",
             "damage": 25,
             "weapon": "Estilete",
             "stats": {
@@ -1055,7 +1055,7 @@
             "defense": 200,
             "hp_max": 125,
             "hp_current": 125,
-            "armor": "No",
+            "armor": "",
             "damage": 40,
             "weapon": "Espada corta",
             "stats": {
@@ -1236,7 +1236,7 @@
             "defense": 80,
             "hp_max": 105,
             "hp_current": 105,
-            "armor": "No",
+            "armor": "",
             "damage": 40,
             "weapon": "Arco corto",
             "stats": {
@@ -1496,7 +1496,7 @@
             "defense": 0,
             "hp_max": 75,
             "hp_current": 75,
-            "armor": "No",
+            "armor": "",
             "damage": 0,
             "weapon": "No",
             "stats": {
@@ -1546,7 +1546,7 @@
             "defense": 0,
             "hp_max": 85,
             "hp_current": 85,
-            "armor": "No",
+            "armor": "",
             "damage": 0,
             "weapon": "No",
             "stats": {
@@ -1596,7 +1596,7 @@
             "defense": 0,
             "hp_max": 95,
             "hp_current": 95,
-            "armor": "No",
+            "armor": "",
             "damage": 0,
             "weapon": "No",
             "stats": {
@@ -1646,7 +1646,7 @@
             "defense": 0,
             "hp_max": 110,
             "hp_current": 110,
-            "armor": "No",
+            "armor": "",
             "damage": 0,
             "weapon": "No",
             "stats": {
@@ -1696,7 +1696,7 @@
             "defense": 0,
             "hp_max": 80,
             "hp_current": 80,
-            "armor": "No",
+            "armor": "",
             "damage": 0,
             "weapon": "No",
             "stats": {
@@ -1751,7 +1751,7 @@
             "defense": 0,
             "hp_max": 95,
             "hp_current": 95,
-            "armor": "No",
+            "armor": "",
             "damage": 0,
             "weapon": "No",
             "stats": {
@@ -1806,7 +1806,7 @@
             "defense": 50,
             "hp_max": 95,
             "hp_current": 95,
-            "armor": "No",
+            "armor": "",
             "damage": 45,
             "weapon": "Natural",
             "stats": {
@@ -1851,7 +1851,7 @@
             "defense": 50,
             "hp_max": 105,
             "hp_current": 105,
-            "armor": "No",
+            "armor": "",
             "damage": 50,
             "weapon": "Natural",
             "stats": {
@@ -1896,7 +1896,7 @@
             "defense": 0,
             "hp_max": 300,
             "hp_current": 300,
-            "armor": 3,
+            "armor": "Natural 3",
             "damage": 55,
             "weapon": "Natural",
             "stats": {
@@ -1937,7 +1937,7 @@
             "defense": 0,
             "hp_max": 310,
             "hp_current": 310,
-            "armor": 3,
+            "armor": "Natural 3",
             "damage": 55,
             "weapon": "Natural",
             "stats": {
@@ -1979,7 +1979,7 @@
             "defense": 0,
             "hp_max": 620,
             "hp_current": 620,
-            "armor": 4,
+            "armor": "Natural 4",
             "damage": 60,
             "weapon": "Natural",
             "stats": {
@@ -2020,7 +2020,7 @@
             "defense": 0,
             "hp_max": 760,
             "hp_current": 760,
-            "armor": 4,
+            "armor": "Natural 4",
             "damage": 60,
             "weapon": "Natural",
             "stats": {
@@ -2063,7 +2063,7 @@
             "defense": 0,
             "hp_max": 1600,
             "hp_current": 1600,
-            "armor": 6,
+            "armor": "Natural 6",
             "damage": 80,
             "weapon": "Natural",
             "stats": {
@@ -2104,7 +2104,7 @@
             "defense": 40,
             "hp_max": 75,
             "hp_current": 75,
-            "armor": 4,
+            "armor": "Natural 4",
             "damage": 40,
             "weapon": "Natural",
             "stats": {
@@ -2143,7 +2143,7 @@
             "defense": 120,
             "hp_max": 140,
             "hp_current": 140,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 50,
             "weapon": "Garras de luz",
             "stats": {
@@ -2183,7 +2183,7 @@
             "defense": 120,
             "hp_max": 125,
             "hp_current": 125,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 40,
             "weapon": "Mordisco",
             "stats": {
@@ -2241,7 +2241,7 @@
             "defense": 0,
             "hp_max": 960,
             "hp_current": 960,
-            "armor": 4,
+            "armor": "Natural 4",
             "damage": 80,
             "weapon": "Aplastamiento / Presa",
             "stats": {
@@ -2282,7 +2282,7 @@
             "defense": 110,
             "hp_max": 125,
             "hp_current": 125,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 50,
             "weapon": "Garras de sombra",
             "stats": {
@@ -2322,7 +2322,7 @@
             "defense": 250,
             "hp_max": 210,
             "hp_current": 210,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 100,
             "weapon": "Alabarda / Espada larga",
             "stats": {
@@ -2376,7 +2376,7 @@
             "defense": 180,
             "hp_max": 130,
             "hp_current": 130,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 40,
             "weapon": "Golpe de viento",
             "stats": {
@@ -2427,7 +2427,7 @@
             "defense": 160,
             "hp_max": 210,
             "hp_current": 210,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 100,
             "weapon": "Hacha de guerra / Garras",
             "stats": {
@@ -2528,7 +2528,7 @@
             "defense": 170,
             "hp_max": 170,
             "hp_current": 170,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 60,
             "weapon": "Cuchillas de agua",
             "stats": {
@@ -2809,7 +2809,7 @@
             "defense": 0,
             "hp_max": 345,
             "hp_current": 345,
-            "armor": 3,
+            "armor": "Natural 3",
             "damage": 20,
             "weapon": "Natural",
             "stats": {
@@ -2848,7 +2848,7 @@
             "defense": 140,
             "hp_max": 380,
             "hp_current": 380,
-            "armor": "Natural",
+            "armor": "Natural 5",
             "damage": 100,
             "weapon": "Garras y huesos",
             "stats": {
@@ -2885,7 +2885,7 @@
             "defense": 110,
             "hp_max": 130,
             "hp_current": 130,
-            "armor": "Natural",
+            "armor": "Natural 4",
             "damage": 60,
             "weapon": "Garras y fauces",
             "stats": {
@@ -2927,7 +2927,7 @@
             "defense": 0,
             "hp_max": 8565,
             "hp_current": 8565,
-            "armor": 10,
+            "armor": "Natural 10",
             "damage": 200,
             "weapon": "Pilar de almas / Apéndices",
             "stats": {
@@ -2967,7 +2967,7 @@
             "defense": 230,
             "hp_max": 275,
             "hp_current": 275,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 120,
             "weapon": "Garras de sombra",
             "stats": {
@@ -3061,7 +3061,7 @@
             "defense": 240,
             "hp_max": 240,
             "hp_current": 240,
-            "armor": "Armadura Completa",
+            "armor": "Completa",
             "damage": 80,
             "weapon": "Lanza de luz",
             "stats": {
@@ -3144,7 +3144,7 @@
             "defense": 250,
             "hp_max": 210,
             "hp_current": 210,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 100,
             "weapon": "Cuchilla de viento",
             "stats": {
@@ -3480,7 +3480,7 @@
             "defense": 160,
             "hp_max": 160,
             "hp_current": 160,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 50,
             "weapon": "Instrumento de venganza",
             "stats": {
@@ -3520,7 +3520,7 @@
             "defense": 275,
             "hp_max": 620,
             "hp_current": 620,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 190,
             "weapon": "Mezira / Akamuth / Coletazo",
             "stats": {
@@ -3562,7 +3562,7 @@
             "defense": 10,
             "hp_max": 150,
             "hp_current": 150,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 15,
             "weapon": "Combate desarmado",
             "stats": {
@@ -3607,7 +3607,7 @@
             "defense": 130,
             "hp_max": 115,
             "hp_current": 115,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 70,
             "weapon": "Garras espectrales",
             "stats": {
@@ -3647,7 +3647,7 @@
             "defense": 135,
             "hp_max": 140,
             "hp_current": 140,
-            "armor": "Escamas 4",
+            "armor": "Natural escamas 4",
             "damage": 70,
             "weapon": "Fauces / Cuchillas encadenadas",
             "stats": {
@@ -3688,7 +3688,7 @@
             "defense": 180,
             "hp_max": 185,
             "hp_current": 185,
-            "armor": "Variable",
+            "armor": "Placas",
             "damage": 140,
             "weapon": "Mandoble",
             "stats": {
@@ -3735,7 +3735,7 @@
             "defense": 55,
             "hp_max": 85,
             "hp_current": 85,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 20,
             "weapon": "Garras",
             "stats": {
@@ -3860,7 +3860,7 @@
             "defense": 100,
             "hp_max": 100,
             "hp_current": 100,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 50,
             "weapon": "Mordisco venenoso / Seda",
             "stats": {
@@ -3903,7 +3903,7 @@
             "defense": 170,
             "hp_max": 170,
             "hp_current": 170,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 90,
             "weapon": "Garras de llamas",
             "stats": {
@@ -3944,7 +3944,7 @@
             "defense": 200,
             "hp_max": 300,
             "hp_current": 300,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 110,
             "weapon": "Garras / Fauces / Cola",
             "stats": {
@@ -3988,7 +3988,7 @@
             "defense": 150,
             "hp_max": 235,
             "hp_current": 235,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 80,
             "weapon": "Garras de distorsión",
             "stats": {
@@ -4157,7 +4157,7 @@
             "defense": 10,
             "hp_max": 245,
             "hp_current": 245,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 20,
             "weapon": "Combate desarmado",
             "stats": {
@@ -4201,7 +4201,7 @@
             "defense": 0,
             "hp_max": 190,
             "hp_current": 190,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 5,
             "weapon": "Toque de cenizas",
             "stats": {
@@ -4244,7 +4244,7 @@
             "defense": 180,
             "hp_max": 175,
             "hp_current": 175,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 50,
             "weapon": "Puños de Diamante",
             "stats": {
@@ -4500,7 +4500,7 @@
             "defense": 70,
             "hp_max": 70,
             "hp_current": 70,
-            "armor": "Natural",
+            "armor": "Natural 2",
             "damage": 55,
             "weapon": "Espada larga",
             "stats": {
@@ -4540,7 +4540,7 @@
             "defense": 240,
             "hp_max": 300,
             "hp_current": 300,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 120,
             "weapon": "Garras de vacío",
             "stats": {
@@ -4578,7 +4578,7 @@
             "defense": 75,
             "hp_max": 100,
             "hp_current": 100,
-            "armor": "N/A",
+            "armor": "",
             "damage": 0,
             "weapon": "Poltergeist",
             "stats": {
@@ -4613,7 +4613,7 @@
             "defense": 105,
             "hp_max": 110,
             "hp_current": 110,
-            "armor": "N/A",
+            "armor": "",
             "damage": 0,
             "weapon": "Poltergeist mayor",
             "stats": {
@@ -4648,7 +4648,7 @@
             "defense": 170,
             "hp_max": 135,
             "hp_current": 135,
-            "armor": "N/A",
+            "armor": "",
             "damage": 0,
             "weapon": "Poltergeist mayor",
             "stats": {
@@ -4803,7 +4803,7 @@
             "defense": 100,
             "hp_max": 110,
             "hp_current": 110,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 50,
             "weapon": "Fauces y Garras",
             "stats": {
@@ -4846,7 +4846,7 @@
             "defense": 10,
             "hp_max": 115,
             "hp_current": 115,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 60,
             "weapon": "Espina de madera",
             "stats": {
@@ -4927,7 +4927,7 @@
             "defense": 40,
             "hp_max": 60,
             "hp_current": 60,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 25,
             "weapon": "Latigazos",
             "stats": {
@@ -4962,7 +4962,7 @@
             "defense": 155,
             "hp_max": 115,
             "hp_current": 115,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 60,
             "weapon": "Garras",
             "stats": {
@@ -5001,7 +5001,7 @@
             "defense": 70,
             "hp_max": 60,
             "hp_current": 60,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 40,
             "weapon": "Fauces",
             "stats": {
@@ -5074,7 +5074,7 @@
             "defense": 5,
             "hp_max": 125,
             "hp_current": 125,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 15,
             "weapon": "Combate desarmado",
             "stats": {
@@ -5378,7 +5378,7 @@
             "defense": 60,
             "hp_max": 65,
             "hp_current": 65,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 30,
             "weapon": "Aguijón",
             "stats": {
@@ -5528,7 +5528,7 @@
             "defense": 100,
             "hp_max": 95,
             "hp_current": 95,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 40,
             "weapon": "Aguja",
             "stats": {
@@ -5566,7 +5566,7 @@
             "defense": 155,
             "hp_max": 110,
             "hp_current": 110,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 45,
             "weapon": "Agujas",
             "stats": {
@@ -5604,7 +5604,7 @@
             "defense": 130,
             "hp_max": 145,
             "hp_current": 145,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 45,
             "weapon": "Garras venenosas",
             "stats": {
@@ -5755,7 +5755,7 @@
             "defense": 10,
             "hp_max": 180,
             "hp_current": 180,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 50,
             "weapon": "Descarga espectral",
             "stats": {
@@ -5793,7 +5793,7 @@
             "defense": 275,
             "hp_max": 400,
             "hp_current": 400,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 190,
             "weapon": "Longinus",
             "stats": {
@@ -5831,7 +5831,7 @@
             "defense": 350,
             "hp_max": 490,
             "hp_current": 490,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 200,
             "weapon": "Longinus",
             "stats": {
@@ -5869,7 +5869,7 @@
             "defense": 155,
             "hp_max": 295,
             "hp_current": 295,
-            "armor": "Tanko",
+            "armor": "Peto",
             "damage": 125,
             "weapon": "Ikusaguruma",
             "stats": {
@@ -5906,7 +5906,7 @@
             "defense": 225,
             "hp_max": 440,
             "hp_current": 440,
-            "armor": "Tanko",
+            "armor": "Placas",
             "damage": 125,
             "weapon": "Ikusaguruma",
             "stats": {
@@ -6018,7 +6018,7 @@
             "defense": 195,
             "hp_max": 160,
             "hp_current": 160,
-            "armor": "Natural",
+            "armor": "Natural 6",
             "damage": 100,
             "weapon": "Tormenta de agujas",
             "stats": {
@@ -6056,7 +6056,7 @@
             "defense": 60,
             "hp_max": 65,
             "hp_current": 65,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 40,
             "weapon": "Golpe de aire",
             "stats": {
@@ -6207,7 +6207,7 @@
             "defense": 180,
             "hp_max": 250,
             "hp_current": 250,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 100,
             "weapon": "Armas de sangre",
             "stats": {
@@ -6283,7 +6283,7 @@
             "defense": 0,
             "hp_max": 580,
             "hp_current": 580,
-            "armor": "Escamas 4",
+            "armor": "Natural escamas 4",
             "damage": 50,
             "weapon": "Mordisco",
             "stats": {
@@ -6320,7 +6320,7 @@
             "defense": 0,
             "hp_max": 215,
             "hp_current": 215,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 0,
             "weapon": "Locura",
             "stats": {
@@ -6431,7 +6431,7 @@
             "defense": 195,
             "hp_max": 250,
             "hp_current": 250,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 75,
             "weapon": "Tamashi no Buki",
             "stats": {
@@ -6466,7 +6466,7 @@
             "defense": 270,
             "hp_max": 325,
             "hp_current": 325,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 90,
             "weapon": "Tamashi no Buki",
             "stats": {
@@ -6501,7 +6501,7 @@
             "defense": 0,
             "hp_max": 2760,
             "hp_current": 2760,
-            "armor": "Escamas 7",
+            "armor": "Natural escamas 7",
             "damage": 135,
             "weapon": "Mordisco",
             "stats": {
@@ -6536,7 +6536,7 @@
             "defense": 0,
             "hp_max": 3325,
             "hp_current": 3325,
-            "armor": "Escamas 8",
+            "armor": "Natural escamas 8",
             "damage": 160,
             "weapon": "Mordisco",
             "stats": {
@@ -6571,7 +6571,7 @@
             "defense": 170,
             "hp_max": 170,
             "hp_current": 170,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 120,
             "weapon": "Energía dual",
             "stats": {
@@ -6606,7 +6606,7 @@
             "defense": 5,
             "hp_max": 110,
             "hp_current": 110,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 45,
             "weapon": "Garras del placer",
             "stats": {
@@ -6678,7 +6678,7 @@
             "defense": 205,
             "hp_max": 230,
             "hp_current": 230,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 75,
             "weapon": "Guadaña de almas",
             "stats": {
@@ -6756,7 +6756,7 @@
             "defense": 40,
             "hp_max": 55,
             "hp_current": 55,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 40,
             "weapon": "Fauces",
             "stats": {
@@ -6847,7 +6847,7 @@
             "defense": 55,
             "hp_max": 100,
             "hp_current": 100,
-            "armor": "No",
+            "armor": "",
             "damage": 50,
             "weapon": "Dos hachas peque?as",
             "stats": {
@@ -6980,7 +6980,7 @@
             "defense": 70,
             "hp_max": 110,
             "hp_current": 110,
-            "armor": "No",
+            "armor": "",
             "damage": 30,
             "weapon": "Daga",
             "stats": {
@@ -7091,7 +7091,7 @@
             "defense": 30,
             "hp_max": 55,
             "hp_current": 55,
-            "armor": "Ninguna",
+            "armor": "",
             "damage": 25,
             "weapon": "Estilete",
             "stats": {

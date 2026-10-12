@@ -1,6 +1,12 @@
 # Reglas de creación de personajes/enemigos
 
-Guía de consulta para que un agente cree **personajes nuevos coherentes** con los 161 enemigos existentes en `enemies.json`. No es un generador aleatorio: son reglas que combinan **nivel × tipología (categoría) × arquetipo (`class_`)**.
+Guía de consulta para que un agente cree **personajes nuevos coherentes** con los 171 enemigos existentes en `enemies.json`. No es un generador aleatorio: son reglas que combinan **nivel × tipología (categoría) × arquetipo (`class_`)**.
+
+Archivos de referencia (el servidor `server.py` **no** los carga; son datos/plantillas):
+
+- `enemies.json` — catálogo maestro de enemigos (171 registros). Aquí se insertan los nuevos.
+- `armors.json` — catálogo de armaduras por nombre, con su modificador por tipo de daño (§7).
+- `REGLAS_PERSONAJES.md` — este documento.
 
 Los personajes nuevos se añaden **al mismo `enemies.json`**, dentro del array `enemies`, con un `id` único. No se crea ningún archivo aparte.
 
@@ -8,18 +14,18 @@ Los personajes nuevos se añaden **al mismo `enemies.json`**, dentro del array `
 
 ## 1. Estructura obligatoria
 
-Todo enemigo debe tener exactamente estas claves (todas presentes en los 161 registros actuales):
+Todo enemigo debe tener exactamente estas claves (todas presentes en los 171 registros actuales):
 
 ```json
 {
-  "id": 162,
+  "id": 172,
   "name": "Nombre en español",
   "category": "Comunes",
   "class_": "Guerrero",
   "level": 3,
   "turn": 60,
-  "attack": 100,
-  "defense": 90,
+  "attack": 125,
+  "defense": 120,
   "hp_max": 130,
   "hp_current": 130,
   "armor": "Cota de cuero",
@@ -42,11 +48,11 @@ Opcionales (solo si el arquetipo los exige):
 
 **Reglas fijas (romperlas invalida el personaje):**
 
-- `class_` lleva guion bajo final (`class` es palabra reservada en Python). `db.build_enemy` acepta `class` como respaldo, pero el archivo usa `class_`.
+- `class_` lleva guion bajo final (`class` es palabra reservada en Python). El archivo usa siempre `class_`.
 - `hp_current` **siempre** igual a `hp_max` al crear.
 - Claves de `stats`: exactamente `AGI, DES, CON, FUE, PER, INT, VOL, POD`.
 - Claves de `resistances`: exactamente `RF, RE, RV, RM, RP`.
-- `armor`: string de `armors.json`, entero (`Natural X`), o valor de "sin armadura" (`"No"`, `"Ninguna"`, `"N/A"`).
+- `armor`: **nombre exacto** de una clave de `armors.json`, o `""` si el personaje no lleva armadura (nunca un entero, `"No"`, `"Ninguna"` ni `"N/A"`).
 - `special`: string o `null` (nunca dict/lista).
 - JSON en UTF-8, con acentos correctos (`"Básico"`, no mojibake).
 
@@ -56,7 +62,7 @@ Opcionales (solo si el arquetipo los exige):
 
 | Eje | Qué controla |
 |---|---|
-| **Nivel (0–16)** | Presupuesto de poder: ataque, defensa, turno, daño, stats, resistencias. |
+| **Nivel (0–16)** | Presupuesto de poder: ataque+defensa (o proyección), turno, daño, stats, resistencias. |
 | **Categoría (tipología)** | Naturaleza: curva de HP, sesgo de stats/resistencias, armadura/arma, rasgos de `special`, si puede tener magia/psiónica. |
 | **`class_` (arquetipo)** | Rol de combate: qué destaca y **qué sistemas puede o no puede tener** (marcial vs proyección mágica vs psíquica). |
 
@@ -64,29 +70,55 @@ Orden de decisión: **nivel → categoría → arquetipo**. El nivel fija los ra
 
 ---
 
-## 3. Ataque, defensa y daño
+## 3. Ataque, defensa y proyección
 
-El ataque y la defensa **no los acota el nivel**: parten de un rango amplio y crecen con la experiencia. Regla de diseño (aplica igual a ataque y defensa):
+El ataque y la defensa se reparten un **presupuesto combinado por arquetipo**. No se acota cada valor por separado: se acota la **suma** `ataque + defensa`.
 
-- **Nivel 1: 0–100** (0 = sin capacidad de combate; 100 = combatiente entrenado).
-- **Por cada nivel adicional: +10 a +20**, según tipo y categoría.
-- **Cada dos niveles: un pequeño salto extra de +5.**
-- Fórmula del máximo: `máx(L) = 100 + (L−1)·(10 a 20) + 5·⌊(L−1)/2⌋`. El mínimo puede seguir siendo 0.
+### 3.1 Arquetipos de combate cuerpo a cuerpo
 
-Tabla de referencia (máximo con crecimiento medio +15):
+Los arquetipos con función combativa cuerpo a cuerpo (marciales, sigilo, soldados) reparten entre `attack` y `defense` un total de:
 
-| Nivel | ATK/DEF | Nivel | ATK/DEF |
+- **Nivel 1: ≈180 puntos** en total (mínimo siempre **160**, máximo **200**).
+- **+30 por nivel**, más **+5 cada dos niveles** (aprox.).
+- **Diferencia máxima de 30 puntos** entre ataque y defensa: `|attack − defense| ≤ 30`.
+
+Fórmula del presupuesto: `T(L) = 180 + 30·(L−1) + 5·⌊(L−1)/2⌋`.
+
+| Nivel | Total (attack + defense) | Nivel | Total (attack + defense) |
 |---|---|---|---|
-| 1 | 0–100 | 9 | 0–240 |
-| 2 | 0–120 | 10 | 0–260 |
-| 3 | 0–135 | 11 | 0–275 |
-| 4 | 0–155 | 12 | 0–295 |
-| 5 | 0–170 | 13 | 0–310 |
-| 6 | 0–190 | 14 | 0–330 |
-| 7 | 0–205 | 15 | 0–345 |
-| 8 | 0–225 | 16 | 0–365 |
+| 1 | 160–200 (≈180) | 9 | ≈440 |
+| 2 | ≈210 | 10 | ≈470 |
+| 3 | ≈245 | 11 | ≈505 |
+| 4 | ≈275 | 12 | ≈535 |
+| 5 | ≈310 | 13 | ≈570 |
+| 6 | ≈340 | 14 | ≈600 |
+| 7 | ≈375 | 15 | ≈635 |
+| 8 | ≈405 | 16 | ≈665 |
 
-Los datos existentes siguen esta envolvente (L3 máx 140, L8 230, L10 300, L16 350). Los `ATK=0` o `DEF=0` de niveles altos provienen de criaturas cuyo valor va en armadura o en `special`, no de que carezcan de combate.
+Reparte ese total entre ataque y defensa sin pasarte del tope de 30 de diferencia (p. ej. L1 → 90/90, 105/75 o 95/85). No tienen por qué ser iguales, pero no deben distar más de 30.
+
+### 3.2 Arquetipos de combate mágico o psíquico
+
+Mago, conjurador y psíquico son **débiles físicamente**: su `attack`/`defense`/`damage` van bajos o directamente `0`, y el grueso de su poder va en la **proyección** (`proyeccion_magica` o `proyeccion_psiquica`).
+
+Esa proyección lleva **≈60 % del presupuesto marcial** del mismo nivel: `P(L) ≈ 0.6 · T(L)`.
+
+| Nivel | Proyección (≈0.6·T) | Nivel | Proyección (≈0.6·T) |
+|---|---|---|---|
+| 1 | ≈108–120 | 9 | ≈264 |
+| 2 | ≈126 | 10 | ≈282 |
+| 3 | ≈147 | 11 | ≈303 |
+| 4 | ≈165 | 12 | ≈321 |
+| 5 | ≈186 | 13 | ≈342 |
+| 6 | ≈204 | 14 | ≈360 |
+| 7 | ≈225 | 15 | ≈381 |
+| 8 | ≈243 | 16 | ≈399 |
+
+Así, si un soldado de nivel 1 reparte ≈180 (100/80) o hasta 200 (100/100), un combatiente mágico del mismo nivel tendrá una proyección de ≈110–120. Los **híbridos** (Paladín, Guerrero Mentalista, `Dual`, `Entre mundos`) quedan a medio camino: proyección al ~60 % **y** un reparto físico intermedio (por debajo del tope marcial).
+
+### 3.3 Arquetipos no combatientes
+
+`Novel`/`Natural` y personajes sin rol de combate (Comunes, etc.) no usan el presupuesto anterior: conservan el rango amplio (**0–100 en L1**, +10 a +20 por nivel), pudiendo ser `0` si no combaten.
 
 **Bandas de stats (cada característica):**
 
@@ -169,10 +201,10 @@ Hay **dos curvas**; elegir según la categoría:
 | Luchadores y soldados | 1–8 | Humanoide | DES, FUE, CON | INT, POD | Medias parejas | Arma + armadura real | No |
 | Animales | 0–4 | Monstruo | FUE, CON, AGI | INT, VOL, POD | RP bajo | Natural / garras / mordisco | No |
 | Bestias | 1–7 | Monstruo | FUE, CON, DES, PER | INT | Medias | Natural / garras / fauces | No |
-| Elementales | 0–13 | Monstruo | Todo parejo (≈9–11) | — | **Parejas y altas** | Natural X o `Ninguna` | **Sí (Warlock)** |
+| Elementales | 0–13 | Monstruo | Todo parejo (≈9–11) | — | **Parejas y altas** | Natural X o sin armadura | **Sí (Warlock)** |
 | Criaturas | 2–15 | Monstruo | CON, FUE | INT, VOL | Parejas, altas | Natural | No |
 | No muertos | 0–10 | Monstruo | FUE, CON | INT, VOL, POD, **RM/RP** | **RM/RP bajos (0–60)** | Natural X | No |
-| Espíritus | 1–10 | Humanoide | VOL, POD, INT, DES | **CON, FUE** | Altas parejas | `Ninguna` / Natural | Psi excepcional |
+| Espíritus | 1–10 | Humanoide | VOL, POD, INT, DES | **CON, FUE** | Altas parejas | sin armadura / Natural | Psi excepcional |
 | Constructos | 2–12 | Monstruo | CON, FUE, DES | VOL, POD, **RM** | RM baja | Natural X / armadura | No |
 | Máquinas | 2–9 | Monstruo | CON, VOL, FUE | POD, **RM** | **RM 0–60** | Natural / artefacto | No |
 | Plantas | 1–4 | Monstruo | CON, FUE | INT, VOL, POD | RP/RM bajas | Natural | No |
@@ -182,6 +214,8 @@ Hay **dos curvas**; elegir según la categoría:
 | Entidades | 8–16 | Monstruo | **Todo alto (13–20)** | — | **Muy altas (90–195)** | Natural | Según arquetipo |
 | Místicos | 1–8 | Humanoide | POD, INT, VOL | FUE, CON, AGI | RM alta | Sin arma | **Sí (magia)** |
 | Hechiceros | 1-9 | Humanoide | DES, INT, POD | ATK/DEF muy bajos | RM alta | Daga, sin armadura | **Sí (magia)** |
+
+El reparto de `attack`/`defense` y de la proyección de cada fila sigue §3: los perfiles con combate cuerpo a cuerpo usan el presupuesto `T(L)` (≈180 en L1), y los mágicos/psíquicos van a proyección `≈0.6·T(L)` con físico bajo o nulo.
 
 **Reglas de sesgo de resistencias (obligatorias):**
 
@@ -200,6 +234,7 @@ El arquetipo decide **el reparto físico y qué sistema de proyección tiene**. 
 `Guerrero`, `Maestro en armas` (también escrito `Maestro de Armas`), `Guerrero Acróbata`, `Paladín`, `Paladín oscuro`, clase marcial de `Luchadores y soldados`.
 
 - **Destaca:** `attack`, `defense`, `damage`, `CON`/`FUE`/`DES`.
+- **Presupuesto físico:** reparte `attack + defense` según §3.1 → `T(L)` (L1 ≈180, mín 160, máx 200) con **≤30** de diferencia entre ambos.
 - **`magic`:** no. **`psionics`:** no.
 - **Arma y armadura reales** (`armors.json`).
 - Turno medio. Resistencias medias.
@@ -219,12 +254,12 @@ El arquetipo decide **el reparto físico y qué sistema de proyección tiene**. 
 - **Débil físico:** `attack`/`defense`/`damage` bajos, HP humanoide bajo.
 - **Obligatorio `magic`:** `proyeccion_magica`, `act`, `zeon`, `nivel_via`. `Convocador` añade `convocar`, `dominar`, `atar`, `desconvocar`.
 - **Destaca:** `INT`, `VOL`, `POD`. `RM` alta.
-- Proyección mágica escala con el nivel (L3 ≈ 60, L7 ≈ 130, L10 ≈ 190).
+- Proyección mágica escala con el nivel a ≈60 % del presupuesto marcial (§3.2): L1 ≈110–120, L3 ≈150, L5 ≈190, L8 ≈245, L10 ≈280.
 
 ### 6.4 Psíquico
 `Mentalista`, `Guerrero Mentalista`, `Ilusionista`.
 
-- **Obligatorio `psionics`:** `proyeccion_psiquica`, `potencial_psiquico` y `disciplinas` (dict de disciplina → lista de poderes).
+- **Obligatorio `psionics`:** `proyeccion_psiquica` (≈60 % del presupuesto marcial, §3.2), `potencial_psiquico` y `disciplinas` (dict de disciplina → lista de poderes).
 - **Destaca:** `VOL`, `POD`; `Guerrero Mentalista` mantiene combate medio (híbrido).
 - **`magic`:** no.
 
@@ -232,7 +267,7 @@ El arquetipo decide **el reparto físico y qué sistema de proyección tiene**. 
 `Natural`, `Novel` en criaturas.
 
 - **Sin `magic` ni `psionics`.**
-- `INT` y `VOL` bajos. Ataques naturales, `weapon` tipo `Natural`/`Garras`/`Mordisco`, `armor` `Natural X` o `Ninguna`.
+- `INT` y `VOL` bajos. Ataques naturales, `weapon` tipo `Natural`/`Garras`/`Mordisco`, `armor` `Natural X` o `""` (sin armadura).
 
 ### 6.6 Híbridos / genéricos
 `Dual`, `Entre mundos`, `Nobel`, `Tecnicista`.
@@ -255,7 +290,26 @@ El arquetipo decide **el reparto físico y qué sistema de proyección tiene**. 
 
 ## 7. Armadura, arma y manual
 
-- **Armadura:** usar un nombre existente de `armors.json` (52 entradas, p. ej. `"Cota de cuero"`, `"Semicompleta"`, `"Mallas"`, `"Piel"`), un entero para armadura natural (`3` → `Natural 3`) o `"No"`/`"Ninguna"`/`"N/A"`.
+- **Armadura:** usar un nombre exacto de `armors.json` (100 entradas), o `""` si el personaje no lleva armadura (nunca un entero, `"No"`, `"Ninguna"` ni `"N/A"`).
+
+### 7.1 Armaduras (`armors.json`)
+
+`armors.json` es un objeto `nombre → { tipo_de_daño: valor }`. El **valor** es el grado de protección de esa armadura frente a cada tipo de daño (más alto = más protección; `0` = sin protección de ese tipo). Los siete tipos de daño son siempre las mismas claves:
+
+`Filo`, `Contundente`, `Penetrante`, `Calor`, `Electricidad`, `Frio`, `Energia`.
+
+Familias de entradas:
+
+- **Fabricadas** (humanoides): desde `Acolchada`, `Cota de cuero`, `Gabardina`, `Piel`, `Mallas`, `Peto`, `Semicompleta`, `Placas`, `Completa`, `Completa pesada`, `De campaña pesada`… hasta sus variantes `… reforzada` (`Acolchada reforzada`, `Mallas reforzadas`, `Completa pesada reforzada`, etc.).
+- **Naturales** (criaturas/constructos): `Natural 2`…`Natural 12`, `Natural escamas 4/7/8/9/10/12`, `Natural + Reforzada 6`, `Cuerpo de piedra`, `Cuerpo de piedra pulida`, `Cuerpo de diamante`, `Caparazón de metal`, `Cuerpo de metal`, `Armadura quitinosa`, `Quitina 2/8/13`, `Huesos 5`, `Madera 2`, `Roca 10`, `Escamas de Cristal 12`, `Escamas negras 12`, `Metal 6/7`, `Metal Estelar 6`, `Sombras 4`, `Necrod 3`, `Absodian 10`, `Infernal 6`, `Demoníaca 2`, `Fase 8`, `Placas sombrías`.
+- **Energía** (elementales/entidades): `Energía 2`…`Energía 12` (solo protegen `Energia`; el resto a `0`).
+
+Reglas al asignar armadura:
+
+- Usa **exactamente** uno de los nombres del archivo (respeta mayúsculas y acentos). No inventes nombres nuevos ni variantes que no existan.
+- No cambies los valores por tipo de daño: la armadura "es lo que dice" `armors.json`.
+- Para monstruos usa `Natural N` (N = grado), o `""` si no lleva armadura; nunca fuerces una armadura fabricada en una criatura natural.
+- Si el catálogo no cubre un caso y no encaja en ninguna familia, usa `""` (sin armadura) en vez de inventar una entrada.
 - **Arma:** español, coherente con el arquetipo (`"Espada larga"`, `"Daga"`, `"Arco corto"`, `"Garras"`, `"Mordisco"`, `"Natural"`).
 - **`manual`:** referencia tipo `"Básico, p. 298"`. Si no aplica, cadena vacía.
 - **`abilities`:** usar nombres existentes (coherentes con el rol): `Advertir`, `Buscar`, `Sigilo`, `Ocultarse`, `Proezas de fuerza`, `Intimidar`, `Resistir el dolor`, `Ocultismo`, `Valoración mágica`… El valor escala con el nivel.
@@ -267,15 +321,15 @@ El arquetipo decide **el reparto físico y qué sistema de proyección tiene**. 
 Antes de insertar, verificar:
 
 1. [ ] `hp_current == hp_max`.
-2. [ ] `id` único (el siguiente libre; actualmente 167 está ocupado → usar 168+).
+2. [ ] `id` único (el siguiente libre; actualmente 171 está ocupado → usar 172+).
 3. [ ] `level` dentro del rango observado de la categoría (o justificar la excepción).
 4. [ ] `stats` tiene las 8 claves; `resistances` las 5 claves.
-5. [ ] ATK/DEF según §3: **L1 0–100** y **+10 a +20 por nivel** (+5 extra cada dos niveles).
+5. [ ] ATK/DEF según §3: cuerpo a cuerpo = `T(L)` (L1 ≈180, mín 160, máx 200; **+30/nivel y +5 cada dos niveles**; `|ATK−DEF| ≤ 30`); mágico/psíquico = físico bajo y proyección `≈0.6·T(L)`.
 6. [ ] Nivel ⇔ bandas de stats y resistencias de §3.
 7. [ ] Daño = daño base del arma + bonificación por FUE (§3); coherencia con el tamaño del arma, salvo monstruos o armas mágicas/especiales.
 8. [ ] Resistencia sesgada según tipología (§5): RM/RP bajos en No muertos/Máquinas/Constructos; parejas en Elementales/Espíritus/Entidades.
-9. [ ] Arquetipo ⇔ sistemas: Mago → `magic`, Psíquico → `psionics`, Marcial → **ninguno**.
-10. [ ] `armor` resoluble en `armors.json` o `Natural X` / sin armadura.
+9. [ ] Arquetipo ⇔ sistemas: Mago → `magic`, Psíquico → `psionics`, Marcial → **ninguno**. La proyección va a ≈60 % del presupuesto marcial (§3.2).
+10. [ ] `armor` es una clave de `armors.json` o `""` (sin armadura).
 11. [ ] `special` es string o `null`.
 12. [ ] JSON escrito en UTF-8 con acentos correctos.
 13. [ ] `category` usa la grafía canónica (`Luchadores y soldados`, `Místicos`, `Máquinas`, `Espíritus`).
@@ -287,29 +341,29 @@ Antes de insertar, verificar:
 Extraídas del patrón real de los datos.
 
 **L0 · Común · Novel** — humanoide plano, sin proyección.
-ATK 20, DEF 20, HP 70, Turno 40, Daño 10 (desarmado); stats ≈ 5; resistencias ≈ 20; `armor "No"`, `weapon "No"`.
+ATK 20, DEF 20, HP 70, Turno 40, Daño 10 (desarmado); stats ≈ 5; resistencias ≈ 20; `armor ""`, `weapon "No"`.
 
 **L3 · Luchadores y soldados · Guerrero** — marcial con armadura.
-ATK 100, DEF 100, HP 130, Turno 70, Daño 50 (arma media); DES/FUE/CON altos, INT/POD bajos; resistencias ≈ 50; `armor` real, arma real.
+ATK+DEF ≈245 (p. ej. ATK 125 / DEF 120, máx 30 de diferencia), HP 130, Turno 70, Daño 50 (arma media); DES/FUE/CON altos, INT/POD bajos; resistencias ≈ 50; `armor` real (`armors.json`), arma real.
 
 **L6 · Bestias · Sombra** — monstruo natural.
-ATK 190, DEF 195, HP 3000, Turno 145, Daño 100; FUE/CON/DES/PER altos, INT 5; RP bajo; `weapon "Garras"`, `armor "Natural 6"`; sin magia/psi.
+ATK+DEF ≈340 (p. ej. ATK 170 / DEF 170), HP 3000, Turno 145, Daño 100; FUE/CON/DES/PER altos, INT 5; RP bajo; `weapon "Garras"`, `armor "Natural 6"`; sin magia/psi.
 
 **L10 · Místicos · Hechicero** — conjurador.
-ATK/DEF bajos, HP ~110, Turno alto, `magic {proyeccion_magica≈190, act≈80, zeon≈1150, nivel_via≈90}`; INT/VOL/POD altos; RM alta; `armor "Ninguna"`.
+ATK/DEF bajos (0), HP ~110, Turno alto, `magic {proyeccion_magica≈280, act≈80, zeon≈1150, nivel_via≈90}`; INT/VOL/POD altos; RM alta; `armor ""`.
 
 **L13 · Elementales · Warlock** — elemental poderoso.
-ATK/DEF ~270, HP 5000–8500, Turno ~90–120, Daño ~220; stats ≈10–12 parejos; las 5 resistencias parejas y altas; `magic` presente; `special` con rasgos elementales ("Filo de luz", "forma elemental", "exención física").
+ATK+DEF ≈570 (p. ej. ATK 285 / DEF 285), HP 5000–8500, Turno ~90–120, Daño ~220; stats ≈10–12 parejos; las 5 resistencias parejas y altas; `magic` presente; `special` con rasgos elementales ("Filo de luz", "forma elemental", "exención física").
 
 **L16 · Entidades · (arquetipo según rol)** — cúspide.
-ATK 350, DEF 350, HP 5000–10500, Turno 190, Daño 200; **todos** los stats 15–20; resistencias 90–195 parejas.
+ATK+DEF ≈665 (p. ej. ATK 335 / DEF 330), HP 5000–10500, Turno 190, Daño 200; **todos** los stats 15–20; resistencias 90–195 parejas.
 
 ---
 
 ## 10. Cómo insertar en `enemies.json`
 
 1. Abrir `enemies.json` (UTF-8) y localizar el array `"enemies"`.
-2. Añadir el objeto nuevo al final del array con `id` = siguiente libre.
+2. Añadir el objeto nuevo al final del array con `id` = siguiente libre (172+).
 3. Respetar la estructura completa de §1 y pasar el checklist de §8.
 4. Escribir el archivo **en UTF-8** y con `ensure_ascii=False` si se hace por script, para no garbar los acentos.
-5. Ejecutar la app (`python main.py`) desde la raíz del repo para confirmar que carga y la card renderiza bien.
+5. Ejecutar la app (`python server.py`) desde la raíz del repo para confirmar que carga y la card renderiza bien.

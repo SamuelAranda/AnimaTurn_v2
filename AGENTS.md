@@ -22,6 +22,16 @@ There is no build step, no tests, no linter, and no CI. Do not invent test/lint 
 - No frontend framework; `script.js` builds HTML strings and calls global `onclick` handlers.
 - Session state is **process-global, shared by all connected clients** (one table for everyone). Persisted automatically to `session_state.json` (gitignored) after every mutation and reloaded on startup. Delete that file to reset. Writes are atomic (`.tmp` + replace).
 
+## Enemy generation references (data, not code)
+
+These three files are **reference data/templates only** — `server.py` does **not** read them:
+
+- `enemies.json` — master catalogue of 171 enemies (`id`, `name`, `category`, `class_`, `level`, `attack`, `defense`, `hp_max`/`hp_current`, `armor`, `damage`, `weapon`, `stats`, `abilities`, `resistances`, optional `magic`/`psionics`).
+- `armors.json` — armour catalogue: `name → { Filo, Contundente, Penetrante, Calor, Electricidad, Frio, Energia }` (protection value per damage type). 100 entries (fabricadas, `Natural N`/natural materials, `Energía N`). In `enemies.json`, `armor` is always a key of this file or `""` (no armour).
+- `REGLAS_PERSONAJES.md` — rules an agent must follow to generate coherent enemies (level × category × `class_`; attack+defence budget; magic/psionic projection ≈60 %).
+
+When adding enemies: append to `enemies.json` `enemies[]` with the next free `id`, follow `REGLAS_PERSONAJES.md`, and never mix archetypes (a physical top role with top projection).
+
 ## Character model
 
 Four tipos: `jugador`, `aliado`, `enemigo`, `pnj` (replaced the old `bando`).

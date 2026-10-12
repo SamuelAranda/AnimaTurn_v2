@@ -84,6 +84,11 @@ Se puede añadir un personaje nuevo en cualquier momento: queda sin turno durant
 - `templates/index.html`: interfaz principal y modales.
 - `static/script.js`: cliente WebSocket, pestañas/fichas y renderizado de rondas.
 - `static/style.css`: estilos, estados y adaptación móvil.
+- `enemies.json`: catálogo de referencia con 171 enemigos (nivel, categoría, arquetipo, stats, armadura, daño, etc.).
+- `armors.json`: catálogo de armaduras de referencia (100 entradas) con su modificador por tipo de daño (Filo, Contundente, Penetrante, Calor, Electricidad, Frío, Energía).
+- `REGLAS_PERSONAJES.md`: reglas para generar personajes/enemigos coherentes con el catálogo.
+
+Los archivos `enemies.json`, `armors.json` y `REGLAS_PERSONAJES.md` son **datos y plantillas de referencia**: el servidor **no** los carga, solo sirven de guía para crear enemigos nuevos.
 
 ## Requisitos
 
