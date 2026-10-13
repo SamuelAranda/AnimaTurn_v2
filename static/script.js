@@ -13,10 +13,26 @@ let characterModal = { mode: "add", id: null, tipo: "jugador" }
 let gmMode = false
 let estadoTargetId = null
 let estadoColor = "azul"
+let ARMORS = {}
+let ENEMIES = []
 
 const $ = (id) => document.getElementById(id)
 const TIPOS_JUGADOR = ["jugador", "aliado"]
 const ESTADO_COLORES = ["rojo", "verde", "amarillo", "azul", "naranja", "morado"]
+
+async function cargarCatalogos() {
+    try {
+        const [a, e] = await Promise.all([
+            fetch('/api/armors').then(r=>r.json()),
+            fetch('/api/enemies').then(r=>r.json())
+        ])
+        ARMORS = a || {}
+        ENEMIES = Array.isArray(e)?e:[]
+        populateArmorSelect()
+    } catch(err) {
+        console.error(err)
+    }
+}
 
 window.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".tab-button").forEach(button => {
@@ -26,7 +42,9 @@ window.addEventListener("DOMContentLoaded", () => {
         input.addEventListener("change", updateCharModalVisibility)
     })
     $("attack-target")?.addEventListener("change", updateAttackForm)
+    $("char-armadura")?.addEventListener("change", fillTaFromArmor)
     initGmMode()
+    cargarCatalogos()
     renderEmptyState()
     actualizarEstadoRonda("Pendiente de generar")
     connectWebSocket()
@@ -369,6 +387,8 @@ function openAddModal() {
     $("char-estilo").value = "0"
     $("char-dano").value = "0"
     $("char-acumulacion").checked = false
+    const armSel = $("char-armadura")
+    if (armSel) { populateArmorSelect(""); armSel.value = ""; fillTaFromArmor(); }
     updateCharModalVisibility()
     showModal("character-modal")
 }
@@ -376,6 +396,27 @@ function openAddModal() {
 function openEditModal(id) {
     characterModal = { mode: "edit", id: Number(id), tipo: "jugador" }
     send({ type: "get_character", id })
+}
+
+function populateArmorSelect(selected="") {
+    const sel = $("char-armadura")
+    if (!sel) return
+    const keys = Object.keys(ARMORS).sort()
+    sel.innerHTML = '<option value="">Sin armadura</option>' + keys.map(k=>`<option value="${escapeHtml(k)}">${escapeHtml(k)}</option>`).join("")
+    if (selected) sel.value = selected
+}
+
+function fillTaFromArmor() {
+    const arm = ($("char-armadura")?.value||"").trim()
+    const TIPO_MAP = { "Filo":"ta-filo","Contundente":"ta-contundente","Penetrante":"ta-penetrante","Calor":"ta-calor","Electricidad":"ta-electricidad","Frio":"ta-frio","Energia":"ta-energia" }
+    if (!arm) {
+        Object.values(TIPO_MAP).forEach(id=>{const el=$(id); if(el) el.value=""})
+        return
+    }
+    const vals = ARMORS[arm] || {}
+    Object.entries(TIPO_MAP).forEach(([k,id])=>{
+        const el=$(id); if(el) el.value = (vals[k]!==undefined && vals[k]!==null)? vals[k] : 0
+    })
 }
 
 function populateCharacterModal(p) {
@@ -401,6 +442,19 @@ function populateCharacterModal(p) {
     $("char-acumulacion").checked = !!p.acumulacion
     $("char-ataque").value = p.ataque ?? 0
     $("char-defensa").value = p.defensa ?? 0
+    const armSel = $("char-armadura")
+    if (armSel) {
+        populateArmorSelect(p.armadura||"")
+        armSel.value = p.armadura||""
+    }
+    const tt = p.ta_tipos || {}
+    $("ta-filo").value = tt.Filo??""
+    $("ta-contundente").value = tt.Contundente??""
+    $("ta-penetrante").value = tt.Penetrante??""
+    $("ta-calor").value = tt.Calor??""
+    $("ta-electricidad").value = tt.Electricidad??""
+    $("ta-frio").value = tt.Frio??""
+    $("ta-energia").value = tt.Energia??""
     updateCharModalVisibility()
     showModal("character-modal")
 }
@@ -443,7 +497,19 @@ function saveCharacterModal() {
         ta,
         dano: parseFloat($("char-dano").value) || 0,
         acumulacion: $("char-acumulacion").checked,
+        armadura: ($("char-armadura")?.value || "").trim(),
     }
+    const ta_tipos = {
+        Filo: parseInt($("ta-filo").value||0,10)||0,
+        Contundente: parseInt($("ta-contundente").value||0,10)||0,
+        Penetrante: parseInt($("ta-penetrante").value||0,10)||0,
+        Calor: parseInt($("ta-calor").value||0,10)||0,
+        Electricidad: parseInt($("ta-electricidad").value||0,10)||0,
+        Frio: parseInt($("ta-frio").value||0,10)||0,
+        Energia: parseInt($("ta-energia").value||0,10)||0,
+    }
+    base.ta_tipos = ta_tipos
+
     if (!TIPOS_JUGADOR.includes(tipo)) {
         const ataque = parseInt($("char-ataque").value, 10)
         const defensa = parseInt($("char-defensa").value, 10)
@@ -547,6 +613,7 @@ function performAttack() {
         target_id: targetId,
         numero,
         reduccion_armadura: Number($("attack-reduccion").value) || 0,
+        tipo_dano: ($("attack-tipo-dano")?.value || "Filo"),
     }
     if (target && TIPOS_JUGADOR.includes(target.tipo)) {
         const defensaNumero = Number($("attack-defensa-numero").value)
@@ -570,8 +637,14 @@ function mostrarResultadoAtaque(data) {
     if (gmMode) {
         html += `<div class="result-message ${data.estado}">${escapeHtml(data.mensaje)}</div>`
         html += `<dl class="result-details"><div><dt>Ataque</dt><dd>${escapeHtml(data.ataque_detalle)}</dd></div><div><dt>Defensa</dt><dd>− ${escapeHtml(data.defensa_detalle)}</dd></div><div><dt>Porcentaje</dt><dd>${data.porcentaje}%</dd></div>`
+        html += `<div><dt>Tipo de daño</dt><dd>${escapeHtml(data.tipo_dano||"")}</dd></div>`
+        if (data.lleva_armadura !== undefined) html += `<div><dt>Lleva armadura</dt><dd>${data.lleva_armadura?"Sí":"No"}</dd></div>`
+        if (data.ta_tipo_catalogo !== undefined) html += `<div><dt>TA catálogo (tipo)</dt><dd>${data.ta_tipo_catalogo}</dd></div>`
+        if (data.ta_a_usar !== undefined) html += `<div><dt>TA a usar (+base 1 si armadura)</dt><dd>${data.ta_a_usar}</dd></div>`
+        html += `<div><dt>Reducción de armadura</dt><dd>${data.reduccion_armadura ?? 0}</dd></div>`
+        html += `<div><dt>TA efectiva</dt><dd>− ${ (data.ta_efectiva ?? data.ta) * 10 }%</dd></div>`
         if (data.estado === "golpe") {
-            html += `<div><dt>Reducción de armadura</dt><dd>${data.reduccion_armadura ?? 0}</dd></div><div><dt>TA efectiva</dt><dd>− ${(data.ta_efectiva ?? data.ta) * 10}%</dd></div><div><dt>Daño</dt><dd>${fmt(data.dano_total)}</dd></div><div><dt>Vida restante</dt><dd>${fmt(data.vida_actual)}</dd></div>`
+            html += `<div><dt>% post-TA</dt><dd>${data.porcentaje_post_ta ?? 0}%</dd></div><div><dt>Daño</dt><dd>${fmt(data.dano_total)}</dd></div><div><dt>Vida restante</dt><dd>${fmt(data.vida_actual)}</dd></div>`
         } else {
             html += `<div><dt>Fallo</dt><dd>${data.fallo}%</dd></div>`
         }
@@ -764,14 +837,97 @@ function formatTirada(p) {
     return `Vel ${p.velocidad} + d100(${p.roll}) = ${p.total}`
 }
 
+function openPresetModal() {
+    renderPresetList()
+    showModal("preset-modal")
+}
+function closePresetModal() { hideModal("preset-modal") }
+
+function renderPresetList() {
+    const list = $("preset-list")
+    const filter = ($("preset-filter")?.value||"").toLowerCase()
+    const sort = $("preset-sort")?.value||"nombre-asc"
+    if (!list) return
+    let items = ENEMIES.slice()
+    if (filter) {
+        items = items.filter(e=>{
+            return [e.name,e.category,e.class_, String(e.level)].some(x=>(x||"").toLowerCase().includes(filter))
+        })
+    }
+    items = sortPresets(items, sort)
+    if (items.length===0) { list.innerHTML='<p class="estado-empty">Sin resultados</p>'; return }
+    list.innerHTML = items.map(e=>`
+      <div class="info-box preset-item" style="margin-bottom:6px;cursor:pointer;padding:6px 8px" onclick="applyPreset(${e.id})">
+        <div class="personaje-header"><strong class="preset-name" style="font-size:0.95rem;line-height:1.1">${escapeHtml(e.name)}</strong><span class="stat-chip" style="font-size:0.75rem">${e.id}</span></div>
+        <div class="personaje-meta preset-meta">
+          <span class="stat-chip" style="font-size:0.8rem;padding:1px 6px">Cat: ${escapeHtml(e.category||"")}</span>
+          <span class="stat-chip" style="font-size:0.8rem;padding:1px 6px">Tipo: ${escapeHtml(e.class_||"")}</span>
+          <span class="stat-chip" style="font-size:0.8rem;padding:1px 6px">Nv ${e.level}</span>
+          <span class="stat-chip" style="font-size:0.8rem;padding:1px 6px">HP ${e.hp_max}</span>
+          <span class="stat-chip" style="font-size:0.8rem;padding:1px 6px">Armadura: ${escapeHtml(e.armor||"")}</span>
+        </div>
+      </div>
+    `).join("")
+}
+
+function sortPresets(items, sort){
+    const getCat = e=>e.category||""
+    const getTipo = e=>e.class_||""
+    const cmpStr = (a,b,dir)=>{const x=(a||"").toLowerCase(), y=(b||"").toLowerCase(); if(x<y)return dir==='asc'?-1:1; if(x>y)return dir==='asc'?1:-1; return 0}
+    const arr=items.slice()
+    if(sort==='nombre-asc') arr.sort((a,b)=>cmpStr(a.name,b.name,'asc'))
+    else if(sort==='nombre-desc') arr.sort((a,b)=>cmpStr(a.name,b.name,'desc'))
+    else if(sort==='categoria-asc') arr.sort((a,b)=>cmpStr(getCat(a),getCat(b),'asc')||cmpStr(a.name,b.name,'asc'))
+    else if(sort==='categoria-desc') arr.sort((a,b)=>cmpStr(getCat(a),getCat(b),'desc')||cmpStr(a.name,b.name,'asc'))
+    else if(sort==='tipo-asc') arr.sort((a,b)=>cmpStr(getTipo(a),getTipo(b),'asc')||cmpStr(a.name,b.name,'asc'))
+    else if(sort==='tipo-desc') arr.sort((a,b)=>cmpStr(getTipo(a),getTipo(b),'desc')||cmpStr(a.name,b.name,'asc'))
+    else if(sort==='nivel-asc') arr.sort((a,b)=>(a.level||0)-(b.level||0)||cmpStr(a.name,b.name,'asc'))
+    else if(sort==='nivel-desc') arr.sort((a,b)=>(b.level||0)-(a.level||0)||cmpStr(a.name,b.name,'asc'))
+    else arr.sort((a,b)=>(a.id||0)-(b.id||0))
+    return arr
+}
+
+function applyPreset(id) {
+    const e = ENEMIES.find(x=>x.id===Number(id))
+    if (!e) return
+    // abrir modal añadir precargado
+    characterModal = { mode:"add", id:null, tipo:"enemigo" }
+    $("character-kicker").textContent="Nuevo personaje (prediseñado)"
+    $("character-title").textContent = e.name
+    $("tipo-selector").classList.remove("hidden")
+    document.querySelectorAll('input[name="tipo"]').forEach(input=>{
+        input.disabled=false
+        input.checked = input.value==="enemigo"
+    })
+    $("char-nombre").value = e.name||""
+    $("char-velocidad").value = e.turn||0
+    $("char-vida-max").value = e.hp_max||0
+    $("char-vida-actual").value = ""
+    $("char-zeon").value = (e.magic&&e.magic.zeon)||0
+    $("char-ki").value = 0
+    const estilo = (e.abilities && (e.abilities.Estilo || e.abilities.estilo)) || 0
+    $("char-estilo").value = estilo||0
+    $("char-ta").value = 0
+    $("char-dano").value = e.damage||0
+    $("char-acumulacion").checked=false
+    $("char-ataque").value = e.attack||0
+    $("char-defensa").value = e.defense||0
+    const armSel = $("char-armadura")
+    if (armSel) { populateArmorSelect(e.armor||""); armSel.value = e.armor||""; fillTaFromArmor() }
+    updateCharModalVisibility()
+    closePresetModal()
+    showModal("character-modal")
+}
+
 function showModal(id) {
     const modal = $(id)
+    if (!modal) return
     modal.classList.remove("hidden")
     modal.setAttribute("aria-hidden", "false")
 }
 function closeAttackModal() { hideModal("attack-modal"); currentAttack = null }
 function closeResultModal() { hideModal("result-modal"); pendingCounterattack = null }
-function hideModal(id) { $(id).classList.add("hidden"); $(id).setAttribute("aria-hidden", "true") }
+function hideModal(id) { const m=$(id); if(m){m.classList.add("hidden"); m.setAttribute("aria-hidden","true")} }
 
 function showToast(message, error = false) {
     let toast = $("toast")

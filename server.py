@@ -23,6 +23,26 @@ TIPOS_JUGADOR = {"jugador", "aliado"}
 TIPOS_ENEMIGO = {"enemigo", "pnj"}
 TIPOS_VALIDOS = TIPOS_JUGADOR | TIPOS_ENEMIGO
 
+DANOS_TIPOS = ["Filo", "Contundente", "Penetrante", "Calor", "Electricidad", "Frio", "Energia"]
+
+# Catálogos cargados en memoria
+ARMORS = {}
+ENEMIES = []
+
+def cargar_catalogos():
+    global ARMORS, ENEMIES
+    try:
+        ARMORS = json.loads(Path("armors.json").read_text(encoding="utf-8"))
+    except Exception as e:
+        ARMORS = {}
+        print("ERROR cargando armors.json:", e)
+    try:
+        data_e = json.loads(Path("enemies.json").read_text(encoding="utf-8"))
+        ENEMIES = data_e.get("enemies", []) if isinstance(data_e, dict) else (data_e or [])
+    except Exception as e:
+        ENEMIES = []
+        print("ERROR cargando enemies.json:", e)
+
 # Colores admitidos para los Estados/Tags personalizados.
 ESTADOS_COLORES = {"rojo", "verde", "amarillo", "azul", "naranja", "morado"}
 ESTADOS_MAX = 20
@@ -108,6 +128,8 @@ def migrar_personaje(personaje):
     personaje.setdefault("criticos", [])
     personaje.setdefault("a_la_defensiva", False)
     personaje.setdefault("estados", [])
+    personaje.setdefault("armadura", "")
+    personaje.setdefault("ta_tipos", {})
 
     for obsoleto in ("bando", "vida", "parada", "esquiva"):
         personaje.pop(obsoleto, None)
@@ -265,6 +287,7 @@ def mostrar_direcciones():
 
 @app.on_event("startup")
 async def startup_event():
+    cargar_catalogos()
     cargar_estado()
     mostrar_direcciones()
 
@@ -273,6 +296,16 @@ async def startup_event():
 async def get():
     with open("templates/index.html", encoding="utf-8") as f:
         return HTMLResponse(f.read())
+
+
+@app.get("/api/armors")
+async def api_armors():
+    return ARMORS
+
+
+@app.get("/api/enemies")
+async def api_enemies():
+    return ENEMIES
 
 
 @app.websocket("/ws")
@@ -486,6 +519,8 @@ def construir_personaje(raw):
             return None, "Revisa los valores. Vida, TA, Ataque y Defensa son obligatorios."
         return None, "Revisa los valores. Puntos de Vida y TA son obligatorios."
 
+    armadura = str(raw.get("armadura", "")).strip()
+    ta_tipos = raw.get("ta_tipos") or {}
     personaje = {
         "id": next_personaje_id,
         "nombre": nombre[:100],
@@ -504,6 +539,8 @@ def construir_personaje(raw):
         "criticos": [],
         "a_la_defensiva": False,
         "estados": [],
+        "armadura": armadura,
+        "ta_tipos": ta_tipos if isinstance(ta_tipos, dict) else {},
     }
     next_personaje_id += 1
     return personaje, None
@@ -556,6 +593,10 @@ def actualizar_personaje(data):
 
     if "acumulacion" in data:
         personaje["acumulacion"] = bool(data["acumulacion"])
+    if "armadura" in data:
+        personaje["armadura"] = str(data.get("armadura", "")).strip()
+    if "ta_tipos" in data and isinstance(data.get("ta_tipos"), dict):
+        personaje["ta_tipos"] = data.get("ta_tipos")
 
     if personaje.get("vida_max", 0) < personaje.get("vida_actual", 0):
         personaje["vida_actual"] = personaje["vida_max"]
@@ -689,6 +730,10 @@ def resolver_ataque(data, contraataque=False):
     except (TypeError, ValueError):
         return {"error": "La reducción de armadura no es válida."}
 
+    tipo_dano = str(data.get("tipo_dano") or "").strip()
+    if tipo_dano not in DANOS_TIPOS:
+        return {"error": "Tipo de daño no válido."}
+
     # Jugador/aliado introduce el número limpio; enemigo/PNJ usa su Ataque guardado.
     if atacante.get("tipo") in TIPOS_ENEMIGO:
         ataque_final = int(atacante.get("ataque", 0) or 0) + numero
@@ -726,20 +771,43 @@ def resolver_ataque(data, contraataque=False):
         "sorpresa": sorpresa,
     }
 
+    # Calcular TA por tipo de daño usando armadura del objetivo
+    arm_obj = objetivo.get("armadura", "") if isinstance(objetivo, dict) else ""
+    lleva_armadura = bool(arm_obj)
+    ta_tipo_catalogo = 0
+    if lleva_armadura and ARMORS:
+        vals = ARMORS.get(arm_obj) or {}
+        try:
+            ta_tipo_catalogo = int(vals.get(tipo_dano, 0) or 0)
+        except Exception:
+            ta_tipo_catalogo = 0
+    ta_a_usar = ta_tipo_catalogo + (1 if lleva_armadura else 0)
+    ta_aplicada = max(1, ta_a_usar - reduccion_armadura)
+
     if porcentaje <= -10:
         resultado["estado"] = "contraataque"
         resultado["fallo"] = redondear_fallo(porcentaje)
         resultado["mensaje"] = f"Contraataque posible: fallo por {resultado['fallo']}%."
+        resultado["tipo_dano"] = tipo_dano
+        resultado["ta_tipo_catalogo"] = ta_tipo_catalogo
+        resultado["lleva_armadura"] = lleva_armadura
+        resultado["ta_a_usar"] = ta_a_usar
+        resultado["ta_efectiva"] = ta_aplicada
+        resultado["reduccion_armadura"] = reduccion_armadura
         return resultado
 
     if porcentaje <= 0:
         resultado["estado"] = "fallo"
         resultado["fallo"] = redondear_fallo(porcentaje)
         resultado["mensaje"] = f"Golpe fallido por {resultado['fallo']}%."
+        resultado["tipo_dano"] = tipo_dano
+        resultado["ta_tipo_catalogo"] = ta_tipo_catalogo
+        resultado["lleva_armadura"] = lleva_armadura
+        resultado["ta_a_usar"] = ta_a_usar
+        resultado["ta_efectiva"] = ta_aplicada
+        resultado["reduccion_armadura"] = reduccion_armadura
         return resultado
 
-    ta = int(objetivo.get("ta", 0) or 0)
-    ta_aplicada = ta_efectiva(objetivo, reduccion_armadura)
     porcentaje_post_ta = max(0, porcentaje - ta_aplicada * 10)
     dano_base = atacante.get("dano", 0) or 0
     dano_total = dano_base * porcentaje_post_ta / 100
@@ -757,7 +825,7 @@ def resolver_ataque(data, contraataque=False):
     resultado.update({
         "estado": "golpe",
         "impacto": True,
-        "ta": ta,
+        "ta": objetivo.get("ta", 0),
         "reduccion_armadura": reduccion_armadura,
         "ta_efectiva": ta_aplicada,
         "porcentaje_post_ta": porcentaje_post_ta,
@@ -769,6 +837,10 @@ def resolver_ataque(data, contraataque=False):
         "caido": caido,
         "a_la_defensiva": objetivo.get("a_la_defensiva", False),
         "mensaje": f"Golpe: {porcentaje_post_ta}% de {dano_base:g} = {dano_total:g} daño.",
+        "tipo_dano": tipo_dano,
+        "ta_tipo_catalogo": ta_tipo_catalogo,
+        "lleva_armadura": lleva_armadura,
+        "ta_a_usar": ta_a_usar,
     })
     return resultado
 

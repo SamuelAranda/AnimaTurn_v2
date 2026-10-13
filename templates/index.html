@@ -33,7 +33,7 @@
   <div class="layout">
     <section class="control-panel">
       <div class="panel-heading"><p class="section-kicker">Preparación</p><h2>Configurar personajes</h2></div>
-      <div class="action-row single"><button class="primary-button" onclick="openAddModal()">Añadir personaje</button></div>
+      <div class="action-row"><button class="primary-button" onclick="openAddModal()">Añadir personaje</button><button class="secondary-button" onclick="openPresetModal()">Importar prediseñado...</button></div>
       <div class="action-row"><button class="accent-button" onclick="roll()">Generar iniciativa</button></div>
       <div class="action-row secondary-actions"><button class="secondary-button" onclick="openCombatTab()">Ir al combate</button><button class="ghost-button" onclick="clearSession()">Limpiar sesión</button></div>
     </section>
@@ -88,14 +88,28 @@
       <label class="field"><span>Ki</span><input id="char-ki" type="number" step="0.01" value="0"></label>
       <label class="field"><span>Estilo</span><input id="char-estilo" type="number" inputmode="numeric" value="0"></label>
       <label class="field"><span>TA</span><input id="char-ta" type="number" inputmode="numeric" placeholder="0"></label>
-      <label class="field"><span>Daño base</span><input id="char-dano" type="number" step="0.01" value="0"></label>
-      <label class="field checkbox-field"><span>Acumulación</span><input id="char-acumulacion" type="checkbox"></label>
+    <label class="field"><span>Daño base</span><input id="char-dano" type="number" step="0.01" value="0"></label>
+    <label class="field"><span>Armadura</span><select id="char-armadura"><option value="">Sin armadura</option></select></label>
+    <div class="field field-block">
+      <span>TA por tipo de daño</span>
+      <div class="ta-grid ta-grid-7">
+        <label><span>Filo</span><input id="ta-filo" type="number" inputmode="numeric" step="1"></label>
+        <label><span>Cont.</span><input id="ta-contundente" type="number" inputmode="numeric" step="1"></label>
+        <label><span>Pen.</span><input id="ta-penetrante" type="number" inputmode="numeric" step="1"></label>
+        <label><span>Calor</span><input id="ta-calor" type="number" inputmode="numeric" step="1"></label>
+        <label><span>Eléc.</span><input id="ta-electricidad" type="number" inputmode="numeric" step="1"></label>
+        <label><span>Frío</span><input id="ta-frio" type="number" inputmode="numeric" step="1"></label>
+        <label><span>Energía</span><input id="ta-energia" type="number" inputmode="numeric" step="1"></label>
+      </div>
+      <small class="formula-hint">Se rellena automáticamente al seleccionar armadura. Editable manualmente. El cálculo suma +1 base si lleva armadura.</small>
+    </div>
+    <label class="field checkbox-field"><span>Acumulación</span><input id="char-acumulacion" type="checkbox"></label>
     </div>
     <div class="form-grid secret-grid" id="char-enemigo-fields">
       <label class="field"><span>Ataque</span><input id="char-ataque" type="number" inputmode="numeric" placeholder="0"></label>
       <label class="field"><span>Defensa</span><input id="char-defensa" type="number" inputmode="numeric" placeholder="0"></label>
     </div>
-    <p class="formula-hint">Puntos de Vida y TA son obligatorios. Enemigos y PNJ también requieren Ataque y Defensa.</p>
+    <p class="formula-hint">Puntos de Vida y TA son obligatorios. Enemigos y PNJ también requieren Ataque y Defensa. El cálculo por tipo de daño usa la Armadura + base 1 (se muestra en el resultado en Modo GM).</p>
     <div class="action-row"><button class="accent-button" onclick="saveCharacterModal()">Guardar</button><button class="ghost-button" onclick="closeCharacterModal()">Cancelar</button></div>
   </section>
 </div>
@@ -109,8 +123,17 @@
     <label class="field" id="attack-defense-field"><span>Defensa del objetivo</span><select id="attack-defense"><option value="parada">Parada</option><option value="esquiva">Esquiva</option></select></label>
     <label class="field" id="attack-defensa-numero-field"><span>Defensa limpia del objetivo</span><input id="attack-defensa-numero" type="number" inputmode="numeric" placeholder="0"></label>
     <label class="field"><span id="attack-number-label">Número de ataque</span><input id="attack-number" type="number" inputmode="numeric" placeholder="0"></label>
+    <label class="field"><span>Tipo de daño</span><select id="attack-tipo-dano">
+      <option value="Filo">Filo</option>
+      <option value="Contundente">Contundente</option>
+      <option value="Penetrante">Penetrante</option>
+      <option value="Calor">Calor</option>
+      <option value="Electricidad">Electricidad</option>
+      <option value="Frio">Frío</option>
+      <option value="Energia">Energía</option>
+    </select></label>
     <label class="field"><span>Reducción de armadura</span><input id="attack-reduccion" type="number" inputmode="numeric" value="0"></label>
-    <p class="formula-hint" id="attack-formula-hint">Ataque + número − Defensa = porcentaje final.</p>
+    <p class="formula-hint" id="attack-formula-hint">Ataque + número − Defensa = porcentaje final. TA efectiva = max(1, TA_tipo + (1 si lleva armadura) − Reducción).</p>
     <div class="action-row"><button class="accent-button" onclick="performAttack()">Resolver ataque</button><button class="ghost-button" onclick="closeAttackModal()">Cancelar</button></div>
   </section>
 </div>
@@ -160,6 +183,31 @@
       </div>
     </div>
     <div class="action-row"><button class="accent-button" onclick="addEstado()">Añadir estado</button><button class="ghost-button" onclick="closeEstadoModal()">Cerrar</button></div>
+  </section>
+</div>
+
+<div id="preset-modal" class="modal hidden" aria-hidden="true">
+  <div class="modal-backdrop" onclick="closePresetModal()"></div>
+  <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="preset-title">
+    <div class="modal-header">
+      <div><p class="section-kicker">Catálogo</p><h2 id="preset-title">Personajes prediseñados</h2></div>
+      <button class="close-button" onclick="closePresetModal()" aria-label="Cerrar">×</button>
+    </div>
+    <label class="field"><span>Buscar</span><input id="preset-filter" type="text" placeholder="Nombre, categoría, clase..." oninput="renderPresetList()"></label>
+    <div class="field"><span>Ordenar por</span>
+      <select id="preset-sort" onchange="renderPresetList()">
+        <option value="nombre-asc" selected>Nombre A → Z</option>
+        <option value="nombre-desc">Nombre Z → A</option>
+        <option value="categoria-asc">Categoría A → Z</option>
+        <option value="categoria-desc">Categoría Z → A</option>
+        <option value="tipo-asc">Tipo A → Z</option>
+        <option value="tipo-desc">Tipo Z → A</option>
+        <option value="nivel-asc">Nivel asc</option>
+        <option value="nivel-desc">Nivel desc</option>
+      </select>
+    </div>
+    <div class="preset-list" id="preset-list" style="max-height:400px;overflow:auto"></div>
+    <div class="action-row"><button class="ghost-button" onclick="closePresetModal()">Cancelar</button></div>
   </section>
 </div>
 

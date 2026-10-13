@@ -1129,6 +1129,16 @@ button:disabled {
     accent-color: var(--gold);
 }
 
+.field-block { display:flex; flex-direction:column; gap:6px; }
+.ta-grid { display:grid; gap:4px 6px; }
+.ta-grid-7 { grid-template-columns: repeat(auto-fit, minmax(70px, 1fr)); }
+.ta-grid label { display:flex; flex-direction:column; gap:2px; }
+.ta-grid label span { font-size:0.8rem; opacity:0.9; }
+.ta-grid input { padding:4px 6px; font-size:0.9rem; }
+.preset-item { padding:6px 8px; }
+.preset-name { font-size:0.95rem; line-height:1.1; }
+.preset-meta .stat-chip { font-size:0.8rem; padding:1px 6px; }
+
 .tipo-hint {
     margin: 10px 0 0;
     color: var(--text-soft);
