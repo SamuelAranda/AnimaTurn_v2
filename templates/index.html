@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Combat Tracker</title>
-<link rel="stylesheet" href="/static/style.css?v=4">
-<script src="/static/script.js?v=4" defer></script>
+<link rel="stylesheet" href="/static/style.css?v=5">
+<script src="/static/script.js?v=5" defer></script>
 </head>
 <body>
 <div class="page-shell">
@@ -87,7 +87,6 @@
       <label class="field"><span>Zeon</span><input id="char-zeon" type="number" step="0.01" value="0"></label>
       <label class="field"><span>Ki</span><input id="char-ki" type="number" step="0.01" value="0"></label>
       <label class="field"><span>Estilo</span><input id="char-estilo" type="number" inputmode="numeric" value="0"></label>
-      <label class="field"><span>TA</span><input id="char-ta" type="number" inputmode="numeric" placeholder="0"></label>
     <label class="field"><span>Daño base</span><input id="char-dano" type="number" step="0.01" value="0"></label>
     <label class="field"><span>Armadura</span><select id="char-armadura"><option value="">Sin armadura</option></select></label>
     <div class="field field-block">
@@ -109,7 +108,7 @@
       <label class="field"><span>Ataque</span><input id="char-ataque" type="number" inputmode="numeric" placeholder="0"></label>
       <label class="field"><span>Defensa</span><input id="char-defensa" type="number" inputmode="numeric" placeholder="0"></label>
     </div>
-    <p class="formula-hint">Puntos de Vida y TA son obligatorios. Enemigos y PNJ también requieren Ataque y Defensa. El cálculo por tipo de daño usa la Armadura + base 1 (se muestra en el resultado en Modo GM).</p>
+    <p class="formula-hint">Enemigos y PNJ también requieren Ataque y Defensa. El cálculo por tipo de daño usa la Armadura + base 1 (se muestra en el resultado en Modo GM).</p>
     <div class="action-row"><button class="accent-button" onclick="saveCharacterModal()">Guardar</button><button class="ghost-button" onclick="closeCharacterModal()">Cancelar</button></div>
   </section>
 </div>
@@ -143,7 +142,7 @@
   <section class="modal-card result-card" role="dialog" aria-modal="true" aria-labelledby="result-title">
     <div class="modal-header"><div><p class="section-kicker">Resultado</p><h2 id="result-title">Ataque</h2></div><button class="close-button" onclick="closeResultModal()" aria-label="Cerrar">×</button></div>
     <div id="attack-result"></div>
-    <div id="counterattack-area" class="counterattack-area hidden"><p>El fallo es de 10% o más. El objetivo puede realizar un contraataque.</p><button class="secondary-button" onclick="openCounterattack()">Contraataque</button><button class="ghost-button" onclick="closeResultModal()">No contraatacar</button></div>
+    <div id="counterattack-area" class="counterattack-area hidden"><p id="counterattack-hint">El fallo es de 10% o más. El objetivo puede realizar un contraataque.</p><button class="secondary-button" onclick="openCounterattack()">Contraataque</button><button class="ghost-button" onclick="closeResultModal()">No contraatacar</button></div>
   </section>
 </div>
 

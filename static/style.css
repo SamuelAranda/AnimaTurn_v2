@@ -900,6 +900,12 @@ button:disabled {
     color: var(--text-main);
 }
 
+#char-armadura {
+    height: 42px;
+    padding: 8px 12px;
+    line-height: 1.2;
+}
+
 .formula-hint {
     margin: 14px 0 0;
     color: var(--text-soft);

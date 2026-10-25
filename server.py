@@ -215,6 +215,8 @@ def datos_privados(personaje):
         "estilo": personaje.get("estilo", 0),
         "ataque": personaje.get("ataque", 0),
         "defensa": personaje.get("defensa", 0),
+        "armadura": personaje.get("armadura", ""),
+        "ta_tipos": personaje.get("ta_tipos", {}),
     }
     datos.update(datos_ficha(personaje))
     datos.update(etiquetas_publicas(personaje))
@@ -787,6 +789,7 @@ def resolver_ataque(data, contraataque=False):
     if porcentaje <= -10:
         resultado["estado"] = "contraataque"
         resultado["fallo"] = redondear_fallo(porcentaje)
+        resultado["bono_contraataque"] = resultado["fallo"] // 2
         resultado["mensaje"] = f"Contraataque posible: fallo por {resultado['fallo']}%."
         resultado["tipo_dano"] = tipo_dano
         resultado["ta_tipo_catalogo"] = ta_tipo_catalogo

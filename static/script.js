@@ -398,12 +398,15 @@ function openEditModal(id) {
     send({ type: "get_character", id })
 }
 
-function populateArmorSelect(selected="") {
+function populateArmorSelect(selected=null) {
     const sel = $("char-armadura")
     if (!sel) return
-    const keys = Object.keys(ARMORS).sort()
+    const value = selected === null ? sel.value : selected
+    const keys = Object.keys(ARMORS)
+    if (value && !keys.includes(value)) keys.push(value)
+    keys.sort()
     sel.innerHTML = '<option value="">Sin armadura</option>' + keys.map(k=>`<option value="${escapeHtml(k)}">${escapeHtml(k)}</option>`).join("")
-    if (selected) sel.value = selected
+    if (value) sel.value = value
 }
 
 function fillTaFromArmor() {
@@ -437,7 +440,6 @@ function populateCharacterModal(p) {
     $("char-zeon").value = p.zeon
     $("char-ki").value = p.ki
     $("char-estilo").value = p.estilo
-    $("char-ta").value = p.ta
     $("char-dano").value = p.dano
     $("char-acumulacion").checked = !!p.acumulacion
     $("char-ataque").value = p.ataque ?? 0
@@ -478,13 +480,12 @@ function saveCharacterModal() {
     const nombre = $("char-nombre").value.trim()
     const velocidad = parseInt($("char-velocidad").value, 10)
     const vidaMax = parseFloat($("char-vida-max").value)
-    const ta = parseInt($("char-ta").value, 10)
     if (!nombre || Number.isNaN(velocidad)) {
         showToast("Introduce nombre y velocidad.", true)
         return
     }
-    if (!Number.isFinite(vidaMax) || !Number.isFinite(ta)) {
-        showToast("Puntos de Vida y TA son obligatorios.", true)
+    if (!Number.isFinite(vidaMax)) {
+        showToast("Los Puntos de Vida son obligatorios.", true)
         return
     }
     const base = {
@@ -494,7 +495,7 @@ function saveCharacterModal() {
         zeon: parseFloat($("char-zeon").value) || 0,
         ki: parseFloat($("char-ki").value) || 0,
         estilo: parseInt($("char-estilo").value, 10) || 0,
-        ta,
+        ta: 0,
         dano: parseFloat($("char-dano").value) || 0,
         acumulacion: $("char-acumulacion").checked,
         armadura: ($("char-armadura")?.value || "").trim(),
@@ -639,7 +640,7 @@ function mostrarResultadoAtaque(data) {
         html += `<dl class="result-details"><div><dt>Ataque</dt><dd>${escapeHtml(data.ataque_detalle)}</dd></div><div><dt>Defensa</dt><dd>− ${escapeHtml(data.defensa_detalle)}</dd></div><div><dt>Porcentaje</dt><dd>${data.porcentaje}%</dd></div>`
         html += `<div><dt>Tipo de daño</dt><dd>${escapeHtml(data.tipo_dano||"")}</dd></div>`
         if (data.lleva_armadura !== undefined) html += `<div><dt>Lleva armadura</dt><dd>${data.lleva_armadura?"Sí":"No"}</dd></div>`
-        if (data.ta_tipo_catalogo !== undefined) html += `<div><dt>TA catálogo (tipo)</dt><dd>${data.ta_tipo_catalogo}</dd></div>`
+        if (data.ta_tipo_catalogo !== undefined) html += `<div><dt>TA ${escapeHtml(nombreTipoDano(data.tipo_dano))}</dt><dd>${data.ta_tipo_catalogo}</dd></div>`
         if (data.ta_a_usar !== undefined) html += `<div><dt>TA a usar (+base 1 si armadura)</dt><dd>${data.ta_a_usar}</dd></div>`
         html += `<div><dt>Reducción de armadura</dt><dd>${data.reduccion_armadura ?? 0}</dd></div>`
         html += `<div><dt>TA efectiva</dt><dd>− ${ (data.ta_efectiva ?? data.ta) * 10 }%</dd></div>`
@@ -647,17 +648,23 @@ function mostrarResultadoAtaque(data) {
             html += `<div><dt>% post-TA</dt><dd>${data.porcentaje_post_ta ?? 0}%</dd></div><div><dt>Daño</dt><dd>${fmt(data.dano_total)}</dd></div><div><dt>Vida restante</dt><dd>${fmt(data.vida_actual)}</dd></div>`
         } else {
             html += `<div><dt>Fallo</dt><dd>${data.fallo}%</dd></div>`
+            html += `<div><dt>Bono de contraataque</dt><dd>+${fmt(data.bono_contraataque)}%</dd></div>`
         }
         html += `</dl></div>`
     } else {
         html += `<div class="result-message ${data.estado}">${escapeHtml(resultadoVeredicto(data))}</div>`
         if (data.estado === "golpe") {
             html += `<div class="result-publico">Daño causado: <strong>${fmt(data.dano_total)}</strong></div>`
+        } else if (data.estado === "contraataque") {
+            html += `<div class="result-publico">Bono de contraataque: <strong>+${fmt(data.bono_contraataque)}%</strong></div>`
         }
     }
 
     $("attack-result").innerHTML = html
     $("counterattack-area").classList.toggle("hidden", data.estado !== "contraataque")
+    $("counterattack-hint").textContent = data.estado === "contraataque"
+        ? `El fallo es de ${data.fallo}%. El objetivo puede contraatacar con un bono de +${fmt(data.bono_contraataque)}%.`
+        : "El fallo es de 10% o más. El objetivo puede realizar un contraataque."
     showModal("result-modal")
 
     if (data.estado === "golpe" && data.critico && !data.caido) {
@@ -674,6 +681,11 @@ function resultadoVeredicto(data) {
     if (data.estado === "golpe") return "Impacto confirmado."
     if (data.estado === "contraataque") return "Contraataque posible."
     return "El ataque ha fallado."
+}
+
+function nombreTipoDano(tipo) {
+    const nombres = { Filo: "filo", Contundente: "contundente", Penetrante: "penetrante", Calor: "calor", Electricidad: "electricidad", Frio: "frío", Energia: "energía" }
+    return nombres[tipo] || String(tipo || "tipo")
 }
 
 function openCounterattack() {
@@ -907,7 +919,6 @@ function applyPreset(id) {
     $("char-ki").value = 0
     const estilo = (e.abilities && (e.abilities.Estilo || e.abilities.estilo)) || 0
     $("char-estilo").value = estilo||0
-    $("char-ta").value = 0
     $("char-dano").value = e.damage||0
     $("char-acumulacion").checked=false
     $("char-ataque").value = e.attack||0
